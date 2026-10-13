@@ -1,0 +1,225 @@
+import json
+import re
+
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from core.llm_provider import get_llm, invoke_with_retry, is_rate_limit_error
+
+
+def _extract_json(text: str) -> dict:
+    cleaned = text.strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.strip("`")
+        if cleaned.lower().startswith("json"):
+            cleaned = cleaned[4:].strip()
+
+    start = cleaned.find("{")
+    end = cleaned.rfind("}")
+    if start != -1 and end != -1:
+        cleaned = cleaned[start : end + 1]
+
+    return json.loads(cleaned)
+
+
+def analyze_transcript(transcript: str) -> dict:
+    """
+    Analyze short transcripts in one call. Long transcripts use a checkpointed
+    map-reduce workflow to avoid sending a 12-hour transcript in one prompt.
+    """
+    from hashlib import sha256
+    from pathlib import Path
+    import os
+    from core.config import PROJECT_ROOT
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+    if not transcript.strip():
+        raise ValueError("Transcript is empty; cannot analyze it.")
+
+    # Keep short inputs simple; use map-reduce for large transcripts.
+    if len(transcript) <= 14000:
+        return _analyze_single(transcript)
+
+    cache_dir = PROJECT_ROOT / ".cache" / "analysis"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    digest = sha256(transcript.encode("utf-8")).hexdigest()[:24]
+    cache_file = cache_dir / f"{digest}.json"
+    try:
+        cache = json.loads(cache_file.read_text(encoding="utf-8")) if cache_file.exists() else {}
+    except (OSError, json.JSONDecodeError):
+        cache = {}
+
+    splitter = RecursiveCharacterTextSplitter(chunk_size=12000, chunk_overlap=500)
+    chunks = splitter.split_text(transcript)
+    partials = cache.get("partials", {})
+    partial_prompt = ChatPromptTemplate.from_messages([
+        ("system",
+         "Analyze only this transcript section. Return valid JSON with keys title, summary, "
+         "action_items, key_decisions, open_questions. Preserve factual details and do not invent owners or deadlines."),
+        ("human", "Transcript section {section}/{total}:\\n{text}"),
+    ])
+    partial_chain = partial_prompt | get_llm(temperature=0.1) | StrOutputParser()
+
+    for i, chunk in enumerate(chunks):
+        if str(i) not in partials:
+            raw = invoke_with_retry(
+                partial_chain,
+                {"section": i + 1, "total": len(chunks), "text": chunk},
+                label=f"analysis_chunk_{i+1}",
+            )
+            try:
+                partials[str(i)] = _extract_json(raw)
+            except Exception:
+                partials[str(i)] = {"title": f"Section {i+1}", "summary": raw[:5000],
+                                    "action_items": [], "key_decisions": [], "open_questions": []}
+            tmp = cache_file.with_suffix(".tmp")
+            tmp.write_text(json.dumps({"partials": partials}, ensure_ascii=False), encoding="utf-8")
+            tmp.replace(cache_file)
+
+    final_prompt = ChatPromptTemplate.from_messages([
+        ("system",
+         "Merge these partial video analyses into a concise consolidated analysis. Return valid JSON "
+         "with keys title, summary, action_items, key_decisions, open_questions. Deduplicate repeated "
+         "points, preserve timestamps, prioritize specific facts, and never invent facts. Keep each "
+         "section concise so multiple reduction stages remain within context limits."),
+        ("human", "Partial analyses:\\n{sections}"),
+    ])
+    final_chain = final_prompt | get_llm(temperature=0.1) | StrOutputParser()
+
+    # Hierarchical reduction prevents the merge prompt itself becoming enormous.
+    records = list(partials.values())
+    merge_round = 0
+    while len(records) > 8:
+        merged_records = []
+        for offset in range(0, len(records), 8):
+            group = records[offset:offset + 8]
+            raw = invoke_with_retry(
+                final_chain,
+                {"sections": json.dumps(group, ensure_ascii=False)},
+                label=f"analysis_reduce_{merge_round+1}",
+            )
+            try:
+                merged_records.append(_extract_json(raw))
+            except Exception:
+                merged_records.append({
+                    "title": f"Consolidated sections {offset+1}-{offset+len(group)}",
+                    "summary": raw[:3000],
+                    "action_items": [], "key_decisions": [], "open_questions": [],
+                })
+        records = merged_records
+        merge_round += 1
+
+    raw_final = invoke_with_retry(
+        final_chain, {"sections": json.dumps(records, ensure_ascii=False)}, label="analysis_merge"
+    )
+    try:
+        parsed = _extract_json(raw_final)
+    except Exception:
+        # If the final merge output is malformed, retain section findings.
+        parsed = {
+            "title": "Long video analysis",
+            "summary": "\\n\\n".join(str(p.get("summary", "")) for p in records),
+            "action_items": [p.get("action_items", []) for p in records],
+            "key_decisions": [p.get("key_decisions", []) for p in records],
+            "open_questions": [p.get("open_questions", []) for p in records],
+        }
+    return {
+        "title": str(parsed.get("title", "Video analysis")),
+        "summary": _format_value(parsed.get("summary", "No summary generated.")),
+        "action_items": _format_value(parsed.get("action_items", "No action items found.")),
+        "key_decisions": _format_value(parsed.get("key_decisions", "No key decisions found.")),
+        "open_questions": _format_value(parsed.get("open_questions", "No open questions found.")),
+    }
+
+
+def _analyze_single(transcript: str) -> dict:
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                "You are an expert video analyst. Return only valid JSON with these keys: "
+                "title, summary, action_items, key_decisions, open_questions. "
+                "The title must be at most 8 words. Summary must be professional bullet points. "
+                "Action items must include task, owner, and deadline when available. "
+                "Preserve any timestamps. Do not invent missing facts. If a section has no items, say that clearly.",
+            ),
+            ("human", "Analyze this transcript:\\n\\n{text}"),
+        ]
+    )
+    chain = prompt | get_llm(temperature=0.2) | StrOutputParser()
+    response = invoke_with_retry(chain, {"text": transcript}, label="analyzer")
+    try:
+        parsed = _extract_json(response)
+    except Exception:
+        return {
+            "title": "Video analysis",
+            "summary": response,
+            "action_items": "Could not parse structured action items from the model response.",
+            "key_decisions": "Could not parse structured key decisions from the model response.",
+            "open_questions": "Could not parse structured open questions from the model response.",
+        }
+    return {
+        "title": str(parsed.get("title", "Video analysis")),
+        "summary": _format_value(parsed.get("summary", "No summary generated.")),
+        "action_items": _format_value(parsed.get("action_items", "No action items found.")),
+        "key_decisions": _format_value(parsed.get("key_decisions", "No key decisions found.")),
+        "open_questions": _format_value(parsed.get("open_questions", "No open questions found.")),
+    }
+
+
+def fallback_analysis(transcript: str) -> dict:
+    sentences = _sentences(transcript)
+    summary_sentences = sentences[:6] if sentences else [transcript[:900].strip()]
+    action_matches = _keyword_lines(sentences, ["need to", "should", "must", "will", "todo", "follow up"])
+    decision_matches = _keyword_lines(sentences, ["decided", "decision", "agreed", "approved", "final"])
+    question_matches = [sentence for sentence in sentences if "?" in sentence][:8]
+
+    return {
+        "title": "Transcript analysis fallback",
+        "summary": _numbered(summary_sentences, "Transcript captured, but Groq is currently rate-limited or unavailable."),
+        "action_items": _numbered(action_matches, "No action items detected by the local fallback."),
+        "key_decisions": _numbered(decision_matches, "No key decisions detected by the local fallback."),
+        "open_questions": _numbered(question_matches, "No open questions detected by the local fallback."),
+        "used_fallback": True,
+    }
+
+
+def _sentences(text: str) -> list[str]:
+    cleaned = re.sub(r"\s+", " ", text).strip()
+    if not cleaned:
+        return []
+    parts = re.split(r"(?<=[.!?])\s+", cleaned)
+    return [part.strip() for part in parts if len(part.strip()) > 20]
+
+
+def _keyword_lines(sentences: list[str], keywords: list[str]) -> list[str]:
+    matches = []
+    for sentence in sentences:
+        lowered = sentence.lower()
+        if any(keyword in lowered for keyword in keywords):
+            matches.append(sentence)
+        if len(matches) >= 8:
+            break
+    return matches
+
+
+def _numbered(items: list[str], empty_message: str) -> str:
+    if not items:
+        return empty_message
+    return "\n".join(f"{index}. {item}" for index, item in enumerate(items, start=1))
+
+
+def _format_value(value) -> str:
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        lines = []
+        for index, item in enumerate(value, start=1):
+            if isinstance(item, dict):
+                details = ", ".join(f"{key}: {val}" for key, val in item.items())
+                lines.append(f"{index}. {details}")
+            else:
+                lines.append(f"{index}. {item}")
+        return "\n".join(lines)
+    if isinstance(value, dict):
+        return "\n".join(f"- {key}: {val}" for key, val in value.items())
+    return str(value)

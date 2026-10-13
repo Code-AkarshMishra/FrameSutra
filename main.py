@@ -1,0 +1,63 @@
+from core.config import load_project_env
+
+load_project_env()
+
+from utils.audio_processor import process_input
+from core.transcriber import transcribe_all
+from core.analyzer import analyze_transcript, fallback_analysis, is_rate_limit_error
+from core.rag_engine import build_rag_chain, ask_question
+
+def run_pipeline(source :str, language :str = "english") -> dict:
+    print("starting AI Video Assistant")
+
+    chunks = process_input(source)
+
+    transcript = transcribe_all(chunks, language, source_id=source)
+    print(f"raw transcription (first 300 characters ) {transcript[:300]}")
+
+    try:
+        analysis = analyze_transcript(transcript)
+    except Exception as exc:
+        if not is_rate_limit_error(exc):
+            raise
+        print("Groq is rate-limited or unavailable. Using local fallback analysis.")
+        analysis = fallback_analysis(transcript)
+    
+    rag_chain = build_rag_chain(transcript)
+
+    return {
+        "title": analysis["title"],
+        "transcript": transcript,
+        "summary": analysis["summary"],
+        "action_items": analysis["action_items"],
+        "key_decisions": analysis["key_decisions"],
+        "open_questions": analysis["open_questions"],
+        "rag_chain": rag_chain,
+    }
+
+if __name__ == "__main__":
+    # CLI entry point
+    source = input("Enter YouTube URL or local file path: ").strip()
+    language = input("Language (english/hinglish): ").strip() or "english"
+    result = run_pipeline(source, language)
+
+    print("\n" + "=" * 60)
+    print(f"📌 Title: {result['title']}")
+    print(f"\n📋 Summary:\n{result['summary']}")
+    print(f"\n✅ Action Items:\n{result['action_items']}")
+    print(f"\n🔑 Key Decisions:\n{result['key_decisions']}")
+    print(f"\n❓ Open Questions:\n{result['open_questions']}")
+    print("=" * 60)
+
+    # Phase 2 — Chat with your meeting via RAG
+    print("\n💬 Chat with your meeting (type 'exit' to quit)\n")
+    rag_chain = result["rag_chain"]
+    while True:
+        question = input("You: ").strip()
+        if question.lower() in ["exit", "quit", "q"]:
+            print("👋 Goodbye!")
+            break
+        if not question:
+            continue
+        answer = ask_question(rag_chain, question)
+        print(f"\n🤖 Assistant: {answer}\n")
