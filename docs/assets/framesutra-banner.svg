@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 420" role="img" aria-labelledby="title desc">
+  <title id="title">FrameSutra — Every Frame Has a Story. Every Word Has an Answer.</title>
+  <desc id="desc">A cinematic blue and teal banner with a glowing camera lens and the FrameSutra product name.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#081426"/>
+      <stop offset=".52" stop-color="#102c52"/>
+      <stop offset="1" stop-color="#113e4b"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#91f5e1"/>
+      <stop offset=".5" stop-color="#69b9ff"/>
+      <stop offset="1" stop-color="#c3a0ff"/>
+    </linearGradient>
+    <radialGradient id="aura">
+      <stop offset="0" stop-color="#42d8d0" stop-opacity=".28"/>
+      <stop offset="1" stop-color="#42d8d0" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#d8eeff" stroke-opacity=".055" stroke-width="1"/>
+    </pattern>
+    <filter id="softGlow" x="-70%" y="-70%" width="240%" height="240%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1440" height="420" rx="32" fill="url(#bg)"/>
+  <rect width="1440" height="420" rx="32" fill="url(#grid)"/>
+  <circle cx="1180" cy="220" r="340" fill="url(#aura)"/>
+  <circle cx="1380" cy="55" r="170" fill="#a28cff" fill-opacity=".06"/>
+  <g transform="translate(105 100)">
+    <rect width="220" height="220" rx="58" fill="#09182b" fill-opacity=".72" stroke="#d5edff" stroke-opacity=".16" stroke-width="2"/>
+    <path d="M49 81V59a8 8 0 0 1 8-8h24M139 51h24a8 8 0 0 1 8 8v22M171 139v23a8 8 0 0 1-8 8h-24M81 170H57a8 8 0 0 1-8-8v-23" fill="none" stroke="url(#shine)" stroke-linecap="round" stroke-width="9"/>
+    <circle cx="110" cy="110" r="43" fill="#0a1b30" stroke="url(#shine)" stroke-width="6" filter="url(#softGlow)"/>
+    <circle cx="110" cy="110" r="22" fill="url(#shine)" fill-opacity=".2" stroke="#e9fbff" stroke-opacity=".8" stroke-width="3"/>
+    <circle cx="117" cy="102" r="7" fill="#fff" fill-opacity=".94"/>
+    <path d="m180 24 4 10 10 4-10 4-4 10-4-10-10-4 10-4 4-10Z" fill="#fff0ac"/>
+  </g>
+  <g font-family="Inter,Segoe UI,Arial,sans-serif">
+    <text x="390" y="169" fill="#fff" font-size="78" font-weight="750" letter-spacing="-3">Frame<tspan fill="#91f5e1">Sutra</tspan></text>
+    <text x="396" y="222" fill="#e4f3ff" font-size="25" font-weight="600" letter-spacing=".4">EVERY FRAME HAS A STORY.</text>
+    <text x="396" y="260" fill="#91f5e1" font-size="25" font-weight="600" letter-spacing=".4">EVERY WORD HAS AN ANSWER.</text>
+    <text x="398" y="315" fill="#bfd0e7" font-size="18" letter-spacing=".5">Local-first video intelligence · Transcription · RAG-powered answers</text>
+    <rect x="398" y="350" width="12" height="12" rx="6" fill="#91f5e1"/>
+    <text x="420" y="361" fill="#c9d8eb" font-size="15" letter-spacing=".7">BUILT WITH EFFORT BY AKARSH MISHRA</text>
+  </g>
+  <path d="M1320 126h35m-17-17v35M1260 302h22m-11-11v22" stroke="#b8dcff" stroke-opacity=".45" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="1334" cy="256" r="3" fill="#a7f8e8"/>
+  <circle cx="1280" cy="100" r="2" fill="#fff" fill-opacity=".8"/>
+  <rect x="1" y="1" width="1438" height="418" rx="31" fill="none" stroke="#d9efff" stroke-opacity=".15" stroke-width="2"/>
+</svg>

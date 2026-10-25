@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">FrameSutra icon</title>
+  <desc id="desc">A glowing camera frame around a story lens.</desc>
+  <defs>
+    <linearGradient id="surface" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#10213d"/>
+      <stop offset="1" stop-color="#142f56"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#91f5e1"/>
+      <stop offset=".52" stop-color="#66b8ff"/>
+      <stop offset="1" stop-color="#bd9cff"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect x="4" y="4" width="120" height="120" rx="34" fill="url(#surface)"/>
+  <rect x="5" y="5" width="118" height="118" rx="33" fill="none" stroke="#ffffff" stroke-opacity=".12" stroke-width="2"/>
+  <path d="M31 47V35a5 5 0 0 1 5-5h12M81 30h11a5 5 0 0 1 5 5v12M97 81v12a5 5 0 0 1-5 5H80M47 98H36a5 5 0 0 1-5-5V81" fill="none" stroke="url(#accent)" stroke-linecap="round" stroke-width="6"/>
+  <circle cx="64" cy="64" r="23" fill="#0b172a" stroke="url(#accent)" stroke-width="4" filter="url(#glow)"/>
+  <circle cx="64" cy="64" r="12" fill="url(#accent)" fill-opacity=".2" stroke="#d7f5ff" stroke-opacity=".82" stroke-width="2"/>
+  <circle cx="68" cy="60" r="4" fill="#fff" fill-opacity=".92"/>
+  <path d="m95 22 2.2 5.8L103 30l-5.8 2.2L95 38l-2.2-5.8L87 30l5.8-2.2L95 22Z" fill="#fff1ad"/>
+</svg>
