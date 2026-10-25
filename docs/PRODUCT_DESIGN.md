@@ -76,4 +76,4 @@ The current UI includes labels for file inputs and form fields, `aria-label` on 
 
 ## Design assets and documentation interaction
 
-There are no external mockup files or screenshots in the repository. Mermaid diagrams in the Markdown documentation are rendered visually by GitHub and compatible viewers. `<details>` sections in the README and guides provide expandable instructions. The diagrams link to source concepts rather than embedding generated images, so they remain editable alongside the implementation.
+The project report includes an authored SVG illustration of the workspace, progress and results panels. It is derived from the current component structure and is clearly labeled as an illustration, not a captured runtime screenshot. Genuine browser captures should be added for execution evidence. Mermaid diagrams in the Markdown documentation are rendered by GitHub and compatible viewers. `<details>` sections provide expandable instructions.
