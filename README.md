@@ -1,23 +1,50 @@
 <div align="center">
 
+<img src="docs/assets/framesutra-banner.svg" alt="FrameSutra — Every Frame Has a Story. Every Word Has an Answer." width="100%" />
+
 # FrameSutra
 
-### Every Frame Has a Story. Every Word Has an Answer.
+### *Every Frame Has a Story. Every Word Has an Answer.*
 
-AI-powered video understanding, transcription, summarization, and intelligent question answering, built with a local-first approach. Bring in a public YouTube link or a local recording to create a transcript, structured notes, optional visual observations, and a searchable chat workspace.
+<p>
+  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/License-MIT-20b89a?style=for-the-badge&logo=opensourceinitiative&logoColor=white"></a>
+  <img alt="Python 3.10 or newer" src="https://img.shields.io/badge/Python-3.10%2B-3776ab?style=for-the-badge&logo=python&logoColor=white">
+  <img alt="React interface" src="https://img.shields.io/badge/React-Interface-61dafb?style=for-the-badge&logo=react&logoColor=13213a">
+  <img alt="Local-first" src="https://img.shields.io/badge/Approach-Local--First-8b7cf6?style=for-the-badge&logo=serverless&logoColor=white">
+</p>
 
-**Local-First AI · Video Intelligence · RAG-Powered**
-Built with effort by **Akarsh Mishra**
+**An AI-powered workspace for understanding video.** Bring in a public YouTube link or a local recording to create a searchable transcript, structured notes, optional visual observations, and source-grounded answers—all from a workspace designed to run on your own machine.
 
-The interface includes a site-wide light/dark switch, responsive layouts, and reduced-motion-aware pointer feedback.
+**Built with effort by [Akarsh Mishra](https://github.com/Code-AkarshMishra).**
 
-[Get started](#-quick-start) · [Open the user manual](docs/USER_MANUAL.md) · [Product design](docs/PRODUCT_DESIGN.md) · [Explore the architecture](docs/ARCHITECTURE.md) · [API reference](docs/API_REFERENCE.md) · [Privacy and terms](docs/PRIVACY_AND_TERMS.md)
+The React interface includes a site-wide light/dark theme, responsive layouts, and reduced-motion-aware pointer feedback.
 
-<p align="center"><a href="docs/visuals/pipeline-explorer.html"><strong>Open the interactive pipeline explorer ↗</strong></a> <small>(open the file in a browser from a local checkout)</small></p>
+[🚀 Quick start](#quick-start) · [📘 User manual](docs/USER_MANUAL.md) · [🧭 Architecture](docs/ARCHITECTURE.md) · [🔌 API reference](docs/API_REFERENCE.md) · [🛡️ Privacy and terms](docs/PRIVACY_AND_TERMS.md)
+
+<p align="center"><a href="docs/visuals/pipeline-explorer.html"><strong>🧩 Open the interactive pipeline explorer ↗</strong></a> <small>(open from a local checkout)</small></p>
+
+<p align="center"><img src="docs/assets/framesutra-icon.svg" width="44" height="44" alt="FrameSutra lens logo" /></p>
 
 </div>
 
 ---
+
+<details>
+<summary><strong>🗺️ Browse this README</strong></summary>
+
+1. [At a glance](#at-a-glance)
+2. [What you can do](#what-can-you-do)
+3. [How the pipeline works](#how-the-pipeline-works)
+4. [Quick start](#quick-start)
+5. [Documentation map](#documentation-map)
+6. [Repository map](#repository-map)
+7. [Defaults and limits](#defaults-and-limits)
+8. [Configuration reference](#configuration-reference)
+9. [Where your data goes](#where-your-data-goes)
+10. [Important boundaries](#important-boundaries)
+11. [Contributing and reporting issues](#contributing-and-reporting-issues)
+
+</details>
 
 ## At a glance
 
@@ -33,9 +60,15 @@ The interface includes a site-wide light/dark switch, responsive layouts, and re
 
 > **Data note:** “Local-first” does not mean fully offline. English transcription and vector search run on the host. Depending on the features selected, audio can be sent to Sarvam, and transcript excerpts, prompts, or optional video frames can be sent to Groq. Read the [privacy and data-flow guide](docs/PRIVACY_AND_TERMS.md) before processing sensitive media.
 
+> **Use responsibly:** Only process videos you own or are authorized to use. You are responsible for respecting copyright, privacy, consent, provider terms, and local laws. FrameSutra is an assistive tool; check important claims against the source video.
+
 > **Compatibility note:** Existing installations keep the SQLite filename `videolens.sqlite3` so the rebrand does not disconnect saved local analyses. This is an internal legacy filename; the product name and interface are FrameSutra.
 
 ## What you can do
+
+| ✨ Understand | 🔎 Explore | 📚 Learn | 📦 Keep control |
+|---|---|---|---|
+| Summaries, decisions, action items, chapters, and optional visual notes | Transcript search, timestamped excerpts, and grounded chat | Flashcards, key terms, and quizzes from the source | Local job history, exports, saved analyses, cleanup, and reset controls |
 
 <details open>
 <summary><strong>Analyze and review a video</strong></summary>
@@ -114,48 +147,76 @@ sequenceDiagram
 - A Groq API key for analysis, chat, study sets, and PDF review questions.
 - A Sarvam API key only if you need Hinglish processing.
 
-### 2. Create a Python environment
+### 2. Install the backend
 
 ```powershell
 py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r Requirements.txt
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -r Requirements.txt
 ```
 
-If PowerShell blocks activation, call the environment interpreter directly: `.\.venv\Scripts\python.exe -m pip install -r Requirements.txt`.
+If you already have a compatible environment at `.venv312`, the Windows launcher can use it automatically.
 
 ### 3. Configure provider keys
 
 ```powershell
-Copy-Item .env.example .env
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
-Open `.env` and set `GROQ_API_KEY`. Add `SARVAM_API_KEY` when enabling Hinglish. Keep `.env` private and out of Git.
+Open `.env` and set `GROQ_API_KEY`. Add `SARVAM_API_KEY` when enabling Hinglish. Keep `.env` private and out of Git. `start.bat` creates `.env` from the example only when it does not already exist; it never replaces an existing configuration.
 
 ### 4. Start the API and web interface
 
-In a project-root terminal:
+On Windows, install and start the web app with one command:
 
 ```powershell
-python -m uvicorn api:app --host 127.0.0.1 --port 8000 --reload
+start.bat
 ```
 
-In a second terminal:
+The launcher checks for Python, backend packages, Node.js, and npm. If frontend dependencies are missing, it installs the versions in `frontend/package-lock.json`, then opens separate API and web-service windows. Keep those windows open while using the app.
+
+To run services manually in separate terminals:
 
 ```powershell
-cd frontend
-npm install
-npm run dev
+\.venv\Scripts\python.exe -m uvicorn api:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-Open the local URL printed by Vite, usually <http://localhost:5173>. The API health endpoint is <http://127.0.0.1:8000/api/health>; interactive API documentation is at <http://127.0.0.1:8000/docs>.
+```powershell
+npm ci --prefix frontend
+npm run dev --prefix frontend
+```
+
+Open <http://localhost:5173>. The API health endpoint is <http://127.0.0.1:8000/api/health>; interactive API documentation is at <http://127.0.0.1:8000/docs>.
+
+<details>
+<summary><strong>macOS and Linux: start the services manually</strong></summary>
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install --upgrade pip
+.venv/bin/python -m pip install -r Requirements.txt
+test -f .env || cp .env.example .env
+# Add provider keys to .env, then use separate terminals:
+.venv/bin/python -m uvicorn api:app --host 127.0.0.1 --port 8000 --reload
+npm ci --prefix frontend
+npm run dev --prefix frontend
+```
+
+</details>
 
 <details>
 <summary><strong>Alternative: start the legacy Streamlit interface</strong></summary>
 
-The repository also includes `app.py` and `run.bat` for the earlier Streamlit UI. Install the Python requirements, configure `.env`, then run `streamlit run app.py` or use `run.bat` on Windows. The React + FastAPI interface is the primary documented experience.
+The repository also includes `app.py` and `run.bat` for the earlier Streamlit UI. Install the Python requirements, configure `.env`, then run `streamlit run app.py` or use `run.bat` on Windows. The React + FastAPI interface started by `start.bat` is the primary experience.
 </details>
+
+### First-run notes
+
+- Whisper and sentence-transformer model weights download on first use; the initial analysis can take longer and use substantial disk space.
+- The API binds to `127.0.0.1` by default. Keep it local unless you have deliberately added authentication, TLS, and deployment safeguards.
+- FFmpeg is an external executable. Installing Python packages alone does not install FFmpeg or ffprobe.
+- YouTube availability and supported formats can change; a public URL is not guaranteed to be downloadable.
 
 ## Documentation map
 
@@ -178,6 +239,10 @@ The repository also includes `app.py` and `run.bat` for the earlier Streamlit UI
 .
 ├── api.py                     FastAPI routes, worker lifecycle, exports, cleanup
 ├── app.py                     Legacy Streamlit interface
+├── start.bat                  Windows launcher for the React + FastAPI app
+├── run.bat                    Windows launcher for the legacy Streamlit app
+├── main.py                    Optional command-line analysis flow
+├── check_setup.py             Local provider-key and FFmpeg readiness report
 ├── core/
 │   ├── analyzer.py            Structured transcript analysis
 │   ├── config.py              Project paths and environment loading
@@ -194,7 +259,10 @@ The repository also includes `app.py` and `run.bat` for the earlier Streamlit UI
 │   ├── src/overrides.css      Supplemental component styling
 │   └── vite.config.js         Local API proxy
 ├── utils/audio_processor.py   YouTube/local media acquisition and audio chunks
-├── docs/                      User, architecture, API, operations, and report docs
+├── docs/
+│   ├── assets/                FrameSutra SVG logo and README banner
+│   └── ...                    User, architecture, API, operations, and report docs
+├── .gitattributes             Consistent text and Windows batch line endings
 ├── Requirements.txt           Python dependencies
 └── .env.example               Provider and service configuration template
 ```
@@ -215,6 +283,43 @@ The repository also includes `app.py` and `run.bat` for the earlier Streamlit UI
 
 These are configurable. See [`.env.example`](.env.example) and the [configuration guide](docs/OPERATIONS.md). Provider pricing, free tiers, model availability, YouTube behavior, and downloaded model sizes can change independently of this repository.
 
+## Configuration reference
+
+Set these in the root `.env` file. The backend reads it at startup; restart the API after changing a value. Do not put real credentials in `.env.example` or commit `.env`.
+
+| Variable | Example value | Used for |
+|---|---|---|
+| `GROQ_API_KEY` | *(your key)* | Required for summaries, analysis, grounded chat, study tools, and PDF questions |
+| `GROQ_MODEL` | `llama-3.1-8b-instant` | Optional text model override; check model availability with your provider |
+| `GROQ_VISION_MODEL` | `meta-llama/llama-4-scout-17b-16e-instruct` | Optional vision model for sampled frames from local video |
+| `SARVAM_API_KEY` | *(your key)* | Required only for Hinglish transcription/translation |
+| `SARVAM_STT_MODEL` | `saaras:v2.5` | Sarvam speech-to-text model |
+| `WHISPER_MODEL` | `small` | Local English transcription model; larger choices need more memory and disk |
+| `VIDEO_JOB_WORKERS` | `1` | In-process worker count; keep one API process for the local job store |
+| `MAX_OUTSTANDING_JOBS` | `3` | Queued plus active job capacity |
+| `MAX_UPLOAD_MB` | `512` | Maximum upload size per source |
+| `MAX_MEDIA_HOURS` | `6` | Maximum accepted source duration |
+| `JOB_HOURLY_LIMIT` | `5` | Local job submission limit per client per hour |
+| `CHAT_PER_MINUTE_LIMIT` | `15` | Chat and study request limit per client per minute |
+| `JOB_RETENTION_DAYS` | `30` | Expiry age for unsaved job records |
+| `MEDIA_RETENTION_DAYS` | `7` | Retention window for generated/source media cleanup |
+| `FRONTEND_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Browser origins allowed to call the API |
+
+The committed `.env.example` is the authoritative starter template. For model defaults, rate limits, retention behavior, and provider notes, see [Operations and configuration](docs/OPERATIONS.md).
+
+## Where your data goes
+
+| Data or feature | Processing location |
+|---|---|
+| Media conversion and English Whisper transcription | Your computer |
+| Embeddings and transcript retrieval | Your computer; stored in the local Chroma index |
+| Hinglish transcription | Audio is sent to the configured Sarvam service |
+| Summaries, analysis, chat, study sets | Relevant transcript text or excerpts are sent to the configured Groq service |
+| Optional visual analysis | Selected frames from local video are sent to the configured Groq vision model |
+| Job history, bookmarks, chats, and saved results | Local SQLite database |
+
+Review the full [privacy notice, terms, and user agreement](docs/PRIVACY_AND_TERMS.md) before uploading confidential or personal recordings. Local storage still needs protection: anyone with access to your account or project folders may be able to read it.
+
 ## Important boundaries
 
 - This is a local, single-user application, not an authenticated public service. Do not expose the API directly to the Internet.
@@ -228,12 +333,15 @@ See [known limitations and troubleshooting](docs/OPERATIONS.md#troubleshooting) 
 
 ## Contributing and reporting issues
 
-Keep generated data, model caches, secrets, and uploaded media out of commits. Before changing behavior, update the relevant documentation and verify the affected interface/build locally. Project credit: built with effort by Akarsh Mishra. A public support address, software license, legal jurisdiction, and contribution policy have not been provided; add and review those details before presenting the project as a public service or redistributing it.
+Bug reports are most useful with the affected screen or API route, steps to reproduce, expected behavior, and sanitized logs. Never attach `.env`, API keys, private media, transcripts, or database files to an issue.
+
+For code changes, keep commits focused, update relevant documentation, and keep generated data, model caches, secrets, and uploaded media out of Git. This project is distributed under the [MIT License](LICENSE). Third-party packages, models, and AI providers keep their own licenses and terms.
 
 ---
 
 <div align="center">
 
-**FrameSutra · AI-assisted video review, built for a local workspace.**
+**FrameSutra · Local-first AI · Video intelligence · RAG-powered**<br />
+Every frame has a story. Every word has an answer.
 
 </div>
