@@ -1,6 +1,6 @@
 # Configuration and operations
 
-This guide covers local development and maintenance. Begin with the [README quick start](../README.md#-quick-start).
+This guide covers local development and maintenance. Begin with the [README quick start](../README.md#quick-start).
 
 ## Configuration reference
 
