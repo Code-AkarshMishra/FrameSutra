@@ -53,7 +53,7 @@
     </section>
   </section>
   <section class="note" aria-label="Important operating notes">
-    <article><h2>Local-first is not offline</h2><p>English Whisper and semantic search run on the host. Hinglish audio uses Sarvam. Groq may receive text, retrieved excerpts, prompts, and optional sampled images.</p></article>
+    <article><h2>Local-first is not offline</h2><p>English Whisper and semantic search run on the host. Hinglish audio uses Sarvam. Groq may receive transcript text or chunks, retrieved excerpts, prompts, and optional sampled images.</p></article>
     <article><h2>Private single-user design</h2><p>The service has no login. Its owner/rate-limit identity is derived from client IP. Keep it on localhost or add real authentication and authorization before network exposure.</p></article>
   </section>
   <p class="footer">More detail: <a href="../PRIVACY_AND_TERMS.md">Privacy and terms</a> · <a href="../API_REFERENCE.md">API reference</a> · <a href="../OPERATIONS.md">Operations</a></p>
@@ -64,7 +64,7 @@
     prepare: ['Prepare audio locally', 'The backend inspects duration, obtains YouTube audio when applicable, converts media with FFmpeg/pydub, and creates manageable audio segments. Temporary source and derived files are stored on the host.', 'utils/audio_processor.py · downloads/'],
     english: ['Transcribe English locally', 'The English path loads Whisper on the backend host and writes transcript/checkpoint data locally. First use may download model weights and can take longer.', 'core/transcriber.py · .cache/'],
     hinglish: ['Transcribe Hinglish with Sarvam', 'The audio is split into short pieces and sent to the configured Sarvam speech-to-text/translation endpoint. This provider transfer is required for the Hinglish path.', 'Sarvam API · SARVAM_API_KEY'],
-    analysis: ['Generate notes with Groq', 'The configured Groq text model generates the title, summary, actions, decisions, open questions, answers, and study outputs. Requests can include transcript text or retrieved transcript excerpts.', 'core/analyzer.py · GROQ_API_KEY'],
+    analysis: ['Generate notes with Groq', 'The configured Groq text model generates the title, summary, actions, decisions, open questions, answers, and study outputs. Analysis can send transcript text or chunks; chat can include retrieved sources, while study generation includes transcript excerpts.', 'core/analyzer.py · GROQ_API_KEY'],
     index: ['Create local semantic search', 'The host creates sentence-transformer embeddings and stores transcript/visual chunks in Chroma. Retrieval happens locally; an answer request then sends relevant evidence and the question to the configured text model.', 'core/vector_store.py · vector_db/'],
     review: ['Review, save, and export', 'The browser polls job state and displays results. SQLite stores job history, bookmarks, chat, and saved study material. The UI offers text, Markdown, JSON, and PDF exports.', 'api.py · legacy SQLite filename']
   };
