@@ -4,7 +4,7 @@ Start with the page that matches what you need:
 
 | I want to… | Open |
 |---|---|
-| Install and launch FrameSutra | [Quick start in the root README](../README.md#-quick-start) |
+| Install and launch FrameSutra | [Quick start in the root README](../README.md#quick-start) |
 | Learn the interface | [User manual](USER_MANUAL.md) |
 | Review the interface map and design details | [Product design](PRODUCT_DESIGN.md) |
 | Explore the pipeline visually | [Interactive pipeline explorer](visuals/pipeline-explorer.html) |
@@ -12,7 +12,8 @@ Start with the page that matches what you need:
 | Call the backend directly | [API reference](API_REFERENCE.md) |
 | Configure, maintain, and troubleshoot | [Operations guide](OPERATIONS.md) |
 | Understand privacy and terms | [Privacy and terms](PRIVACY_AND_TERMS.md) |
-| Read a project-level summary | [Project report](PROJECT_REPORT.md) |
+| Read the complete academic-style report | [Project report](PROJECT_REPORT.md) |
+| Review features, users, APIs, differentiation and business model | [Product analysis](PRODUCT_ANALYSIS.md) |
 | Deploy on a controlled host | [Deployment guide](../FrameSutra_DEPLOYMENT.md) |
 | Review implementation limits | [System design](../SYSTEM_DESIGN.md) |
 
@@ -33,6 +34,7 @@ mindmap
       Deployment
     Understand
       Project report
+      Product analysis
       System design
 ```
 
@@ -43,5 +45,5 @@ mindmap
 - “Local” means the machine or container running the backend. It does not mean browser-only or offline processing.
 - The primary interface is React + FastAPI. `app.py` remains as a legacy Streamlit option.
 - API routes and configuration can change; `/docs` on a running API exposes its live OpenAPI schema.
-- Project credit: built with effort by Akarsh Mishra. No support contact, legal entity, governing jurisdiction, or license has been supplied.
+- Project credit: built with effort by Akarsh Mishra. The repository includes an MIT License for project code; third-party packages, models and providers have separate terms.
 </details>
