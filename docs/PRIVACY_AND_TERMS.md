@@ -1,6 +1,6 @@
 # Privacy, terms, and user agreement
 
-This document describes the current local FrameSutra implementation. It is project documentation, not a provider policy or jurisdiction-specific legal notice. Project credit: built with effort by Akarsh Mishra. No support contact address, legal entity, governing jurisdiction, or software license has been supplied.
+This document describes the current local FrameSutra implementation. It is project documentation, not a provider policy or jurisdiction-specific legal notice. Project credit: built with effort by Akarsh Mishra. The repository contains an MIT License for project code; no support contact address, legal entity, or governing jurisdiction has been supplied.
 
 ## Data-flow summary
 
@@ -9,7 +9,7 @@ This document describes the current local FrameSutra implementation. It is proje
 | Local uploaded media | Saved under the project’s `uploads/` and processed by the backend | Hinglish transcription sends audio pieces to Sarvam. Optional frame descriptions send sampled frames to Groq Vision. |
 | YouTube source | URL and derived audio are handled by the backend and `yt-dlp` | Audio pieces can be sent to Sarvam for Hinglish; generated text can be sent to Groq for analysis/chat. `yt-dlp` contacts YouTube. |
 | English speech audio | Prepared and transcribed by local Whisper on the backend host | Not sent to Sarvam by the English transcription path; provider-backed analysis still uses transcript content. |
-| Transcript, prompts, study excerpts | Job result/checkpoint data is stored in local SQLite; retrieval index is local Chroma | Groq may receive transcript excerpts or selected transcript content for title, summary, extraction, answers, or study generation. |
+| Transcript, prompts, study excerpts | Job result/checkpoint data is stored in local SQLite; retrieval index is local Chroma | Groq may receive transcript text/chunks for title, summary and extraction; chat requests can include prompts/retrieved sources, and study requests include transcript excerpts. |
 | Job metadata, chat, bookmarks, study sets | Local `videolens.sqlite3` database | Not intentionally sent as a separate analytics feed by this code. Chat prompts and retrieved excerpts are sent for generated answers. |
 | Temporary media and derived files | `uploads/`, `downloads/`, and `.cache/` on the host | Provider-bound audio or selected frames are transmitted when the corresponding feature is used. |
 | Browser state | Browser `localStorage` retains active job and batch IDs plus the theme preference | Job IDs are sent to the local API as normal job lookups. The theme preference stays in the browser. |
@@ -47,7 +47,7 @@ By submitting a URL or file, you agree that:
 
 1. You have the rights, permission, and necessary consent to process the recording and its contents.
 2. Your use complies with applicable law, copyright, privacy obligations, workplace/school requirements, and source-platform rules.
-3. You understand which selected features send audio, frames, transcript excerpts, or prompts to configured external providers.
+3. You understand which selected features send audio, frames, transcript text/chunks, transcript excerpts, retrieved sources, or prompts to configured external providers.
 4. You are responsible for securing the host machine, API access, `.env` credentials, backups, and generated data.
 5. You will review the original recording for important details because transcripts, summaries, citations, timestamps, and generated study material can be wrong or incomplete.
 
