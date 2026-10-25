@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f5f7fb" />
+    <meta name="description" content="Turn long videos into searchable transcripts, structured notes and source-grounded answers with FrameSutra." />
+    <title>FrameSutra — Every Frame Has a Story</title>
+    <script>
+      try {
+        const savedTheme = localStorage.getItem('framesutra.theme');
+        const initialTheme = savedTheme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.dataset.theme = initialTheme;
+        document.querySelector('meta[name="theme-color"]').content = initialTheme === 'dark' ? '#101522' : '#f5f7fb';
+      } catch { document.documentElement.dataset.theme = 'light'; }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
