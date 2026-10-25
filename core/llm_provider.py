@@ -1,9 +1,11 @@
 """Groq LLM client configuration with migration from retired model IDs."""
 import os
 import time
+import logging
 
 from langchain_groq import ChatGroq
 from core.config import load_project_env
+from core.observability import increment
 
 load_project_env()
 
@@ -52,18 +54,20 @@ def is_rate_limit_error(exc: Exception) -> bool:
 def invoke_with_retry(chain, payload, retries: int = 2, base_delay: int = 4, label: str = "llm"):
     for attempt in range(retries + 1):
         try:
-            return chain.invoke(payload)
+            result = chain.invoke(payload)
+            increment("llm_success")
+            return result
         except Exception as exc:
+            increment("llm_errors")
             if is_auth_error(exc):
                 raise RuntimeError(
                     f"{PROVIDER_NAME} API key is invalid or expired. "
                     f"Please update {API_KEY_ENV} in your .env file."
                 ) from exc
+            if is_rate_limit_error(exc):
+                increment("llm_rate_limits")
             if not is_rate_limit_error(exc) or attempt == retries:
                 raise
             wait = base_delay * (2 ** attempt)
-            print(
-                f"[{label}] {PROVIDER_NAME} rate limit hit. "
-                f"Waiting {wait}s before retry {attempt + 1}/{retries}..."
-            )
+            logging.getLogger("framesutra.provider").warning("provider_rate_limited provider=%s label=%s retry=%d wait_seconds=%d", PROVIDER_NAME, label, attempt + 1, wait)
             time.sleep(wait)

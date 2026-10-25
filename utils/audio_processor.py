@@ -16,9 +16,11 @@ import subprocess
 import time
 import uuid
 import warnings
+import hashlib
 from pathlib import Path
 
 from core.config import PROJECT_ROOT
+from core.observability import increment
 
 warnings.filterwarnings(
     "ignore",
@@ -70,6 +72,8 @@ DOWNLOAD_DIR = PROJECT_ROOT / "downloads"
 DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
 YOUTUBE_JOBS_DIR = DOWNLOAD_DIR / "youtube_jobs"
 YOUTUBE_JOBS_DIR.mkdir(parents=True, exist_ok=True)
+YOUTUBE_AUDIO_CACHE = DOWNLOAD_DIR / "youtube_audio_cache"
+YOUTUBE_AUDIO_CACHE.mkdir(parents=True, exist_ok=True)
 
 
 def _find_node() -> str | None:
@@ -174,6 +178,13 @@ def download_youtube_audio(url: str, retries: int = 2) -> str:
     if not url.lower().startswith(("https://", "http://")):
         raise ValueError("Expected an HTTP(S) URL for YouTube download.")
 
+    canonical_url = url.strip().split("&list=", 1)[0]
+    cache_file = YOUTUBE_AUDIO_CACHE / (hashlib.sha256(canonical_url.encode("utf-8")).hexdigest()[:32] + ".wav")
+    if cache_file.is_file() and cache_file.stat().st_size > 44:
+        increment("youtube_audio_cache_hits")
+        print("[yt-dlp] Reusing cached audio download.")
+        return str(cache_file)
+
     last_exc: Exception | None = None
     attempts = max(1, min(int(retries), 3))
 
@@ -194,7 +205,10 @@ def download_youtube_audio(url: str, retries: int = 2) -> str:
                 reverse=True,
             )
             if wav_files and wav_files[0].is_file() and wav_files[0].stat().st_size > 44:
-                return str(wav_files[0])
+                tmp_cache = cache_file.with_suffix(f".{uuid.uuid4().hex[:8]}.tmp")
+                shutil.copy2(wav_files[0], tmp_cache)
+                os.replace(tmp_cache, cache_file)
+                return str(cache_file)
 
             # A successful-looking yt-dlp response without a WAV is not success.
             raise FileNotFoundError("yt-dlp returned without creating the processed WAV file.")

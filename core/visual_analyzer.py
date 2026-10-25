@@ -13,6 +13,7 @@ from pathlib import Path
 import requests
 
 from core.config import PROJECT_ROOT, load_project_env
+from core.observability import increment
 
 load_project_env()
 FRAME_DIR = PROJECT_ROOT / "downloads" / "frames"
@@ -43,19 +44,14 @@ def _hamming(a: int, b: int) -> int:
     return (a ^ b).bit_count()
 
 
-def extract_sampled_frames(video_path: str, interval_seconds: int = 60, max_frames: int = 80):
+def extract_sampled_frames(video_path: str, interval_seconds: int = 60, max_frames: int = 80, source_identity: str | None = None):
     path = Path(video_path)
     if not path.is_file():
         raise FileNotFoundError("Visual analysis currently requires a local video file path.")
+    stat = path.stat()
     if not shutil_which("ffmpeg"):
         raise RuntimeError("FFmpeg is required for visual frame extraction.")
     FRAME_DIR.mkdir(parents=True, exist_ok=True)
-    run_dir = FRAME_DIR / hashlib.sha256(str(path.resolve()).encode()).hexdigest()[:12]
-    run_dir.mkdir(parents=True, exist_ok=True)
-    # Recreate this video's sample directory to prevent stale frames being reused.
-    for old in run_dir.glob("frame_*.jpg"):
-        old.unlink(missing_ok=True)
-    pattern = str(run_dir / "frame_%06d.jpg")
     requested_interval = max(1, int(interval_seconds))
     duration = 0
     try:
@@ -69,6 +65,22 @@ def extract_sampled_frames(video_path: str, interval_seconds: int = 60, max_fram
         duration = 0
     # Sample across the whole recording rather than only the first N minutes.
     effective_interval = max(requested_interval, (duration + max_frames - 1) // max_frames if duration else requested_interval)
+    identity = source_identity or f"{path.resolve()}|{stat.st_size}|{stat.st_mtime_ns}"
+    signature = f"{identity}|{effective_interval}|{max_frames}"
+    run_dir = FRAME_DIR / hashlib.sha256(signature.encode("utf-8")).hexdigest()[:16]
+    run_dir.mkdir(parents=True, exist_ok=True)
+    cached_frames = sorted(run_dir.glob("frame_*.jpg"))
+    if cached_frames:
+        increment("visual_frame_cache_hits")
+        selected, hashes = [], []
+        for i, frame in enumerate(cached_frames):
+            frame_hash = _average_hash(frame)
+            if any(_hamming(frame_hash, old) <= 4 for old in hashes):
+                continue
+            hashes.append(frame_hash)
+            selected.append((i * effective_interval, frame))
+        return selected
+    pattern = str(run_dir / "frame_%06d.jpg")
     fps = 1 / effective_interval
     command = [
         "ffmpeg", "-hide_banner", "-loglevel", "error", "-i", str(path),
@@ -123,6 +135,9 @@ def describe_frames_with_groq(frames, batch_size: int = 4) -> list[dict]:
                   "temperature": 0.1, "max_tokens": 1400},
             timeout=180,
         )
+        increment("groq_vision_calls")
+        if response.status_code == 429:
+            increment("groq_vision_rate_limits")
         if not response.ok:
             raise RuntimeError(
                 f"Groq vision API returned {response.status_code}: {response.text[:600]}. "
@@ -138,11 +153,12 @@ def describe_frames_with_groq(frames, batch_size: int = 4) -> list[dict]:
     return output
 
 
-def analyze_local_video(video_path: str, interval_seconds: int = 60, max_frames: int = 80):
+def analyze_local_video(video_path: str, interval_seconds: int = 60, max_frames: int = 80, source_identity: str | None = None):
     path = Path(video_path).resolve()
     stat = path.stat()
     model = os.getenv("GROQ_VISION_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct").strip()
-    cache_identity = f"{path}|{stat.st_size}|{stat.st_mtime_ns}|{interval_seconds}|{max_frames}|{model}"
+    identity = source_identity or f"{path}|{stat.st_size}|{stat.st_mtime_ns}"
+    cache_identity = f"{identity}|{interval_seconds}|{max_frames}|{model}"
     cache_key = hashlib.sha256(cache_identity.encode("utf-8")).hexdigest()[:24]
     cache_dir = PROJECT_ROOT / ".cache" / "visual"
     cache_dir.mkdir(parents=True, exist_ok=True)
@@ -152,7 +168,7 @@ def analyze_local_video(video_path: str, interval_seconds: int = 60, max_frames:
     except (OSError, ValueError):
         cached = None
 
-    frames = extract_sampled_frames(str(path), interval_seconds, max_frames)
+    frames = extract_sampled_frames(str(path), interval_seconds, max_frames, source_identity=identity)
     if not frames:
         return []
     frame_by_timestamp = {_timestamp(seconds): frame for seconds, frame in frames}
@@ -160,6 +176,7 @@ def analyze_local_video(video_path: str, interval_seconds: int = 60, max_frames:
         # Reuse completed vision descriptions if the media and settings are unchanged.
         cached_by_time = {item["timestamp"]: item for item in cached}
         if all(_timestamp(seconds) in cached_by_time for seconds, _ in frames):
+            increment("visual_description_cache_hits")
             return [
                 {**cached_by_time[_timestamp(seconds)], "frame": str(frame), "seconds": seconds}
                 for seconds, frame in frames

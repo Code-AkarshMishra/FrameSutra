@@ -3,6 +3,8 @@ import os
 import requests
 from pydub import AudioSegment
 from core.config import load_project_env
+from core.observability import increment
+import logging
 
 load_project_env()
 
@@ -41,6 +43,20 @@ def transcribe_chunk_whisper(chunk_path: str, language: str = "english") -> str:
     return result["text"].strip()
 
 
+def transcribe_chunk_whisper_timed(chunk_path: str, language: str = "english") -> dict:
+    """Return Whisper's segment-level times so citations can jump near the speech."""
+    model = load_model()
+    options = {"task": "transcribe", "fp16": False}
+    if language.lower() == "english":
+        options["language"] = "en"
+    result = model.transcribe(chunk_path, **options)
+    segments = [
+        {"start": max(0.0, float(item.get("start", 0))), "text": str(item.get("text", "")).strip()}
+        for item in result.get("segments", []) if str(item.get("text", "")).strip()
+    ]
+    return {"text": str(result.get("text", "")).strip(), "segments": segments}
+
+
 def _send_to_sarvam(piece_path: str) -> str:
     """Send one ≤30s WAV file to Sarvam and return the English transcript."""
     sarvam_api_key = os.getenv("SARVAM_API_KEY")
@@ -59,6 +75,9 @@ def _send_to_sarvam(piece_path: str) -> str:
             data=data,
             timeout=120,
         )
+    increment("sarvam_calls")
+    if response.status_code == 429:
+        increment("sarvam_rate_limits")
 
     if not response.ok:
         print(f"\n❌ Sarvam returned {response.status_code}")
@@ -153,9 +172,9 @@ def transcribe_all(
     """
     Transcribe audio chunks with durable per-chunk checkpoints.
 
-    Checkpoints are keyed by source identity + language + chunk index. The timestamp
-    attached to each 10-minute audio chunk is approximate; word-level timestamps
-    require provider-specific timestamp support and are not inferred here.
+    Checkpoints are keyed by source identity + language + chunk index. Whisper
+    segment timestamps are speech-aligned; Sarvam currently has only coarse
+    ten-minute chunk timestamps in this pipeline.
     """
     import hashlib
     import json
@@ -177,7 +196,8 @@ def transcribe_all(
             identity = f"{identity}|{source_stat.st_size}|{source_stat.st_mtime_ns}"
     except (OSError, TypeError):
         pass
-    cache_key = hashlib.sha256(f"{identity}|{language.lower()}".encode("utf-8")).hexdigest()[:24]
+    model_identity = SARVAM_MODEL if language.lower() == "hinglish" else WHISPER_MODEL
+    cache_key = hashlib.sha256(f"timestamped-v2|{identity}|{language.lower()}|{model_identity}".encode("utf-8")).hexdigest()[:24]
     cache_file = cache_dir / f"{cache_key}.json"
 
     try:
@@ -192,11 +212,18 @@ def transcribe_all(
         key = str(i)
         if key in results and results[key].get("text") is not None:
             text = results[key]["text"]
+            increment("transcript_chunk_cache_hits")
+            logging.getLogger("framesutra.cache").info("transcript_chunk_cache_hit source_hash=%s chunk=%d", cache_key, i)
             print(f"Reusing transcript checkpoint {i + 1}/{len(chunks)}")
         else:
             print(f"Transcribing chunk {i + 1}/{len(chunks)}...")
-            text = transcribe_chunk(chunk, language=language).strip()
-            results[key] = {"text": text}
+            if language.lower() == "hinglish":
+                text = transcribe_chunk_sarvam(chunk).strip()
+                results[key] = {"text": text}
+            else:
+                timed = transcribe_chunk_whisper_timed(chunk, language=language)
+                text = timed["text"]
+                results[key] = {"text": text, "segments": timed["segments"]}
             checkpoint = {
                 "source_id_hash": cache_key,
                 "language": language.lower(),
@@ -209,12 +236,20 @@ def transcribe_all(
         if progress_callback:
             progress_callback(i + 1, len(chunks))
 
-    # Add coarse 10-minute chunk timestamps so RAG can at least identify the
-    # source interval. These are not word-level or speech-aligned timestamps.
+    # Whisper supplies speech-aligned segment times relative to each 10-minute
+    # audio chunk. Sarvam does not, so its transcript keeps the coarse start time.
     pieces = []
     for i in range(len(chunks)):
-        text = results.get(str(i), {}).get("text", "").strip()
-        if text:
+        item = results.get(str(i), {})
+        text = item.get("text", "").strip()
+        segments = item.get("segments") or []
+        if segments:
+            for segment in segments:
+                segment_text = str(segment.get("text", "")).strip()
+                if segment_text:
+                    stamp = _format_timestamp(i * chunk_duration_seconds + float(segment.get("start", 0)))
+                    pieces.append(f"[Speech timestamp {stamp}]\n{segment_text}")
+        elif text:
             stamp = _format_timestamp(i * chunk_duration_seconds)
             pieces.append(f"[Approx. timestamp {stamp}]\n{text}")
 

@@ -33,14 +33,14 @@ PIPELINE_STEPS = [
     ("rag", "Prepare AI chat", "Index transcript and available visual evidence for grounded Q&A."),
 ]
 
-st.set_page_config(page_title="YouTube Video Analyzer", page_icon="🎬", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="FrameSutra | Every Frame Has a Story", page_icon="🎬", layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown(r'''
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 :root{--ink:#14213d;--muted:#65748b;--line:#e4eaf3;--blue:#365cf5;--blue2:#6b7dff;--cyan:#23b7cc;--paper:#f5f7fc;--panel:#fff;--green:#12a879;--rose:#ef6477;}
 html,body,[class*="css"]{font-family:'DM Sans',sans-serif}
-.stApp{background:radial-gradient(ellipse at 75% 0%,#edf2ff 0%,transparent 32%),var(--paper);color:var(--ink)}
+.stApp{background:var(--paper);color:var(--ink)}
 [data-testid="stHeader"]{background:rgba(245,247,252,.78)}
 [data-testid="stSidebar"],[data-testid="stSidebarCollapsedControl"]{display:none!important}
 .block-container{max-width:1420px;padding-top:1rem;padding-bottom:4rem}
@@ -50,7 +50,7 @@ p,li,label,.stCaption{color:#52617a}
 [data-testid="stVerticalBlockBorderWrapper"]{border-radius:20px!important;border-color:var(--line)!important;background:rgba(255,255,255,.80)}
 .stButton button,.stFormSubmitButton button{border-radius:12px;min-height:2.7rem;font-weight:700;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
 .stButton button:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(54,92,245,.14)}
-.stButton button[kind="primary"],.stFormSubmitButton button[kind="primary"]{background:linear-gradient(105deg,var(--blue),#5877ff);border-color:var(--blue);color:white}
+.stButton button[kind="primary"],.stFormSubmitButton button[kind="primary"]{background:#365cf5;border-color:var(--blue);color:white}
 .stTextInput input,.stTextArea textarea,.stSelectbox div[data-baseweb="select"]{border-radius:12px!important;border-color:#dbe3ef!important;background:#fff}
 [data-testid="stFileUploader"]{border:1.5px dashed #c8d4e9;border-radius:16px;background:#fafdff;padding:.55rem}
 [data-testid="stTabs"] button{font-weight:700;padding-top:.8rem;padding-bottom:.8rem}
@@ -63,22 +63,22 @@ p,li,label,.stCaption{color:#52617a}
 /* App navigation */
 .navbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.7rem 0 1.2rem;margin-bottom:.25rem;border-bottom:1px solid rgba(209,219,235,.78)}
 .brand{display:flex;align-items:center;gap:.7rem;font-family:'Manrope',sans-serif;font-weight:800;font-size:1.03rem;letter-spacing:-.04em;color:#172440}
-.brand-mark{width:2.55rem;height:2.55rem;display:grid;place-items:center;color:#fff;border-radius:13px;background:linear-gradient(145deg,#315df5,#20b9cd);box-shadow:0 8px 19px rgba(54,92,245,.23);font-size:1.2rem}
+.brand-mark{width:2.55rem;height:2.55rem;display:grid;place-items:center;color:#fff;border-radius:13px;background:#365cf5;box-shadow:0 8px 19px rgba(54,92,245,.23);font-size:1.2rem}
 .nav-links{display:flex;align-items:center;gap:1.4rem;color:#65748b;font-weight:650;font-size:.88rem}
 .nav-links a{color:#65748b;text-decoration:none}.nav-links a:hover{color:var(--blue)}
 .local-pill{border:1px solid #dce7f6;background:#fff;border-radius:999px;padding:.42rem .75rem;color:#47627f;font-size:.75rem;font-weight:700;white-space:nowrap}
 
 /* Landing screen */
-.splash-screen{position:fixed;inset:0;z-index:99999;background:linear-gradient(135deg,#101a38 0%,#203f97 54%,#0d9eb4 100%);display:flex;align-items:center;justify-content:center;color:#fff;animation:splashOut .75s ease 1.05s forwards;pointer-events:none}
+.splash-screen{position:fixed;inset:0;z-index:99999;background:#111827;display:flex;align-items:center;justify-content:center;color:#fff;animation:splashOut .75s ease 1.05s forwards;pointer-events:none}
 .splash-inner{text-align:center;animation:splashIn .5s ease both}.splash-logo{width:4.4rem;height:4.4rem;margin:0 auto 1rem;display:grid;place-items:center;border:1px solid rgba(255,255,255,.35);border-radius:22px;background:rgba(255,255,255,.14);font-size:2rem;box-shadow:0 15px 40px rgba(0,0,0,.16)}
-.splash-title{font:800 1.45rem 'Manrope',sans-serif;letter-spacing:-.04em;color:#fff}.splash-sub{font-size:.84rem;color:#dce8ff;margin-top:.45rem}.splash-track{height:4px;width:190px;border-radius:20px;background:rgba(255,255,255,.24);margin:1.25rem auto 0;overflow:hidden}.splash-track span{display:block;height:100%;background:#fff;width:30%;border-radius:20px;animation:loadLine 1.4s ease forwards}
-@keyframes splashOut{to{opacity:0;visibility:hidden}}@keyframes splashIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}@keyframes loadLine{to{width:100%}}
-.hero-shell{position:relative;overflow:hidden;border:1px solid #dce6f6;border-radius:28px;background:linear-gradient(115deg,#ffffff 0%,#f9fbff 53%,#eaf4ff 100%);padding:clamp(1.4rem,4vw,3.5rem);box-shadow:0 18px 48px rgba(24,49,98,.06)}
-.hero-shell:after{content:'';position:absolute;right:-6rem;top:-8rem;width:28rem;height:28rem;border-radius:50%;background:radial-gradient(circle,rgba(54,92,245,.14),rgba(35,183,204,.04) 55%,transparent 72%);pointer-events:none}
+.splash-title{font:800 1.45rem 'Manrope',sans-serif;letter-spacing:-.04em;color:#fff}.splash-sub{font-size:.84rem;color:#dce8ff;margin-top:.45rem}.splash-track{height:4px;width:190px;border-radius:20px;background:rgba(255,255,255,.24);margin:1.25rem auto 0;overflow:hidden}.splash-track span{display:block;height:100%;background:#fff;width:100%;border-radius:20px}
+@keyframes splashOut{to{opacity:0;visibility:hidden}}@keyframes splashIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+.hero-shell{position:relative;overflow:hidden;border:1px solid #dce6f6;border-radius:28px;background:#ffffff;padding:clamp(1.4rem,4vw,3.5rem);box-shadow:0 18px 48px rgba(24,49,98,.06)}
+.hero-shell:after{content:'';position:absolute;right:-6rem;top:-8rem;width:20rem;height:20rem;border-radius:50%;border:1px solid rgba(54,92,245,.10);box-shadow:0 0 0 18px rgba(54,92,245,.025),0 0 0 36px rgba(54,92,245,.02);pointer-events:none}
 .eyebrow{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--blue);font-weight:800;display:flex;align-items:center;gap:.55rem;margin-bottom:1rem}
-.eyebrow:before{content:'';height:2px;width:25px;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:3px}
+.eyebrow:before{content:'';height:2px;width:25px;background:var(--blue);border-radius:3px}
 .hero-title{font-family:'Manrope',sans-serif;font-size:clamp(2.5rem,5.7vw,5rem);font-weight:800;letter-spacing:-.065em;line-height:.99;color:#14213d;margin:0;max-width:880px}
-.hero-gradient{background:linear-gradient(100deg,#315cf5 12%,#2685e7 54%,#14aebd 93%);background-clip:text;-webkit-background-clip:text;color:transparent}
+.hero-gradient{color:#365cf5}
 .hero-copy{max-width:730px;font-size:1.03rem;line-height:1.8;color:#617089;margin-top:1.15rem}
 .hero-tags{display:flex;flex-wrap:wrap;gap:.55rem;margin-top:1.25rem}.hero-tag{background:rgba(255,255,255,.84);border:1px solid #dbe5f4;color:#4d607d;padding:.48rem .7rem;border-radius:999px;font-weight:650;font-size:.77rem}
 .section-heading{font-family:'Manrope',sans-serif;font-size:1.5rem;font-weight:800;letter-spacing:-.045em;color:#172440;margin:.5rem 0 .2rem}.section-subtitle{font-size:.9rem;color:#718097;margin:0 0 1.1rem}
@@ -87,10 +87,10 @@ p,li,label,.stCaption{color:#52617a}
 .how-card{display:flex;gap:.9rem;background:#fff;border:1px solid #e2e9f3;border-radius:16px;padding:1rem;height:100%}.how-no{flex:0 0 2.35rem;width:2.35rem;height:2.35rem;border-radius:11px;display:grid;place-items:center;background:#eef3ff;color:var(--blue);font-weight:800}.how-title{font-weight:800;color:#1b2945;margin-bottom:.25rem}.how-copy{font-size:.83rem;line-height:1.6;color:#6c7a91}
 .step-bar{display:flex;align-items:center;gap:.55rem;margin:0 0 1.2rem;flex-wrap:wrap}.step-pill{display:flex;align-items:center;gap:.45rem;padding:.55rem .8rem;border-radius:999px;border:1px solid #dce5f2;background:white;color:#718099;font-size:.79rem;font-weight:750}.step-pill.active{background:#edf2ff;border-color:#aabdfb;color:#315cf5;box-shadow:0 0 0 3px rgba(54,92,245,.06)}.step-pill.done{background:#eafaf4;border-color:#bcebd9;color:#0c9468}.step-number{display:grid;place-items:center;width:1.35rem;height:1.35rem;border-radius:50%;background:#eef1f7;color:#63728b;font-size:.72rem}.step-pill.active .step-number{background:#315cf5;color:white}.step-pill.done .step-number{background:#10a879;color:white}
 .choice-label{font-size:.72rem;letter-spacing:.13em;text-transform:uppercase;font-weight:800;color:#8492a9;margin-bottom:.4rem}.source-card-title{font-family:'Manrope',sans-serif;font-size:1.15rem;font-weight:800;letter-spacing:-.03em;color:#1a2948}.source-card-copy{font-size:.84rem;line-height:1.6;color:#718097;margin:.35rem 0 .7rem}
-.progress-rail{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.7rem;margin:.4rem 0 1.2rem}.progress-stage{position:relative;background:#fff;border:1px solid #e2e9f3;border-radius:14px;padding:.85rem;overflow:hidden}.progress-stage:before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:#dbe3f0}.progress-stage.active{border-color:#9eb5ff;box-shadow:0 0 0 3px rgba(54,92,245,.06)}.progress-stage.active:before{background:linear-gradient(var(--blue),var(--cyan));animation:stageGlow 1.2s ease-in-out infinite alternate}.progress-stage.done:before{background:var(--green)}.progress-stage.error:before{background:var(--rose)}.stage-title{font-weight:800;font-size:.84rem;color:#253653}.stage-sub{font-size:.73rem;color:#8390a6;margin-top:.25rem;line-height:1.4}@keyframes stageGlow{from{opacity:.45}to{opacity:1}}
-.metric-card{height:100%;border:1px solid #e0e8f4;background:linear-gradient(145deg,#fff,#fafdff);border-radius:18px;padding:1rem 1.15rem;box-shadow:0 7px 24px rgba(28,48,87,.035)}.metric-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;font-weight:800;color:#8592a7}.metric-value{font:800 1.65rem 'Manrope',sans-serif;color:#1b2a49;margin-top:.3rem;overflow-wrap:anywhere}.metric-caption{font-size:.75rem;color:#8794a8;margin-top:.25rem}
+.progress-rail{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.7rem;margin:.4rem 0 1.2rem}.progress-stage{position:relative;background:#fff;border:1px solid #e2e9f3;border-radius:14px;padding:.85rem;overflow:hidden}.progress-stage:before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:#dbe3f0}.progress-stage.active{border-color:#9eb5ff;box-shadow:0 0 0 3px rgba(54,92,245,.06)}.progress-stage.active:before{background:var(--blue);animation:stageGlow 1.2s ease-in-out infinite alternate}.progress-stage.done:before{background:var(--green)}.progress-stage.error:before{background:var(--rose)}.stage-title{font-weight:800;font-size:.84rem;color:#253653}.stage-sub{font-size:.73rem;color:#8390a6;margin-top:.25rem;line-height:1.4}@keyframes stageGlow{from{opacity:.45}to{opacity:1}}
+.metric-card{height:100%;border:1px solid #e0e8f4;background:#fff;border-radius:18px;padding:1rem 1.15rem;box-shadow:0 7px 24px rgba(28,48,87,.035)}.metric-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;font-weight:800;color:#8592a7}.metric-value{font:800 1.65rem 'Manrope',sans-serif;color:#1b2a49;margin-top:.3rem;overflow-wrap:anywhere}.metric-caption{font-size:.75rem;color:#8794a8;margin-top:.25rem}
 .summary-panel{border:1px solid #dce6f4;border-radius:18px;background:#fff;padding:1.35rem;line-height:1.8}.insight-card{border:1px solid #e1e8f1;border-radius:17px;background:#fff;padding:1.15rem;height:100%}.insight-card h4{font-size:1rem!important;letter-spacing:-.02em;margin:0 0 .8rem}.transcript-box{border:1px solid #e0e8f3;background:#fff;border-radius:16px;padding:1.25rem;max-height:550px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;color:#34445f;line-height:1.85;font-size:.92rem}
-.chat-shell{border:1px solid #dae4f4;border-radius:22px;background:linear-gradient(150deg,#f8faff,#fff 52%,#f2fbff);padding:1rem;position:relative;overflow:hidden}.chat-glow{height:4px;border-radius:99px;background:linear-gradient(90deg,#315cf5,#6a62f4,#21bdc3,#315cf5);background-size:260% 100%;animation:chatFlow 4s linear infinite;margin:-1rem -1rem 1rem}@keyframes chatFlow{to{background-position:260% 0}}.download-card{border:1px solid #e0e8f3;background:#fff;border-radius:16px;padding:1.1rem;height:100%}
+.chat-shell{border:1px solid #dae4f4;border-radius:22px;background:#fff;padding:1rem;position:relative;overflow:hidden}.chat-glow{height:4px;border-radius:99px;background:#365cf5;margin:-1rem -1rem 1rem}.download-card{border:1px solid #e0e8f3;background:#fff;border-radius:16px;padding:1.1rem;height:100%}
 .footer{border-top:1px solid #e1e8f2;margin-top:3rem;padding-top:1.3rem;color:#8794a8;font-size:.78rem}
 @media(max-width:1000px){.nav-links{display:none}.progress-rail{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.block-container{padding-left:1rem;padding-right:1rem}.hero-shell{border-radius:20px;padding:1.25rem}.progress-rail{grid-template-columns:1fr 1fr}.feature-card{min-height:0}}
@@ -100,7 +100,7 @@ p,li,label,.stCaption{color:#52617a}
 
 def init_state() -> None:
     defaults = {
-        "page": "home", "splash_seen": False, "selected_language": "English",
+        "page": "home", "splash_seen": False, "selected_language": "English", "theme_mode": "Light",
         "result": None, "prepared_source": None, "prepared_language": None,
         "prepared_chunks": None, "prepared_transcript": None, "prepared_analysis": None,
         "chat_history": [], "pipeline_steps": {}, "last_error": None,
@@ -140,13 +140,38 @@ def update_step(key: str, state: str) -> None:
         render_step_status(slot)
 
 
+def render_theme_styles() -> None:
+    """Apply a consistent high-contrast palette to all Streamlit pages."""
+    if st.session_state.get("theme_mode", "Light") != "Dark":
+        return
+    st.markdown(r'''<style>
+    :root{--ink:#edf2ff;--muted:#aab6cc;--line:#303b50;--paper:#111827;--panel:#182235;--blue:#7c9cff;--green:#35d49a;--rose:#ff7d91}
+    .stApp{background:#111827!important;color:#edf2ff!important}
+    [data-testid="stHeader"]{background:#111827!important}
+    h1,h2,h3,h4,.brand,.hero-title,.section-heading,.feature-title,.how-title,.source-card-title,.stage-title{color:#edf2ff!important}
+    p,li,label,.stCaption,.hero-copy,.section-subtitle,.feature-desc,.how-copy,.source-card-copy,.stage-sub{color:#b4c0d5!important}
+    [data-testid="stVerticalBlockBorderWrapper"],.hero-shell,.feature-card,.how-card,.progress-stage,.metric-card,.summary-panel,.insight-card,.transcript-box,.chat-shell,.download-card{background:#182235!important;border-color:#34425b!important;color:#edf2ff!important}
+    .hero-shell:after{border-color:#405a91!important}
+    .hero-tags .hero-tag,.step-pill,.local-pill{background:#202d43!important;border-color:#3b4c68!important;color:#d5def0!important}
+    .feature-icon,.how-no,.step-number{background:#26395c!important;color:#a9bdff!important}
+    .step-pill.active{background:#26395c!important;border-color:#7c9cff!important;color:#c8d5ff!important}
+    .step-pill.done{background:#173d35!important;border-color:#246b58!important;color:#8df0ca!important}
+    .stTextInput input,.stTextArea textarea,.stSelectbox div[data-baseweb="select"], [data-testid="stFileUploader"]{background:#111b2b!important;color:#edf2ff!important;border-color:#465675!important}
+    [data-testid="stStatusWidget"]{background:#182235!important;border-color:#34425b!important}
+    [data-testid="stAlert"]{background:#202d43!important;color:#edf2ff!important}
+    .footer{color:#aab6cc!important;border-color:#34425b!important}
+    .brand-mark{background:#365cf5!important}
+    </style>''', unsafe_allow_html=True)
+
+
 def render_navbar(current_page: str) -> None:
     left, middle, right = st.columns([2.4, 3.2, 1.25], vertical_alignment="center")
     with left:
-        st.markdown('<div class="brand"><span class="brand-mark">▶</span><span>Video<span style="color:#365cf5">Lens</span><div style="font:500 .68rem \'DM Sans\',sans-serif;color:#8190a6;letter-spacing:.02em;margin-top:.08rem">AI VIDEO ANALYZER</div></span></div>', unsafe_allow_html=True)
+        st.markdown('<div class="brand"><span class="brand-mark">FS</span><span>Frame<span style="color:#365cf5">Sutra</span><div style="font:500 .68rem \'DM Sans\',sans-serif;color:#8190a6;letter-spacing:.02em;margin-top:.08rem">AI VIDEO UNDERSTANDING</div></span></div>', unsafe_allow_html=True)
     with middle:
         st.markdown('<div class="nav-links"><a href="#features">Features</a><a href="#how-to-use">How to use</a><a href="#privacy">Local-first workflow</a></div>', unsafe_allow_html=True)
     with right:
+        st.selectbox("Theme", ["Light", "Dark"], key="theme_mode", label_visibility="collapsed", help="Switch between light and dark themes")
         if st.button("Start analysis →" if current_page == "home" else "Home", type="primary" if current_page == "home" else "secondary", use_container_width=True, key=f"navbar_action_{current_page}"):
             if current_page == "home":
                 st.session_state.page = "setup"
@@ -158,7 +183,7 @@ def render_navbar(current_page: str) -> None:
 
 def render_splash_once() -> None:
     if not st.session_state.splash_seen:
-        st.markdown('''<div class="splash-screen"><div class="splash-inner"><div class="splash-logo">▶</div><div class="splash-title">VideoLens AI</div><div class="splash-sub">Preparing your local video workspace…</div><div class="splash-track"><span></span></div></div></div>''', unsafe_allow_html=True)
+        st.markdown('''<div class="splash-screen"><div class="splash-inner"><div class="splash-logo">▶</div><div class="splash-title">FrameSutra AI</div><div class="splash-sub">Your video workspace is ready</div><div class="splash-track"><span></span></div></div></div>''', unsafe_allow_html=True)
         st.session_state.splash_seen = True
 
 
@@ -171,7 +196,15 @@ def render_step_status(slot=None) -> None:
         mark = "✓" if state == "done" else ("!" if state == "error" else str(index))
         detail = "Skipped for this source" if state == "skipped" else description
         chunks.append(f'<div class="progress-stage {cls}"><div class="stage-title"><span style="color:#365cf5;margin-right:.35rem">{mark}</span>{escape(label)}</div><div class="stage-sub">{escape(detail)}</div></div>')
-    html = '<div class="progress-rail">' + ''.join(chunks) + '</div>'
+    completed = sum(1 for key, _, _ in PIPELINE_STEPS if st.session_state.pipeline_steps.get(key) in ("done", "skipped"))
+    total = len(PIPELINE_STEPS)
+    active = next((label for key, label, _ in PIPELINE_STEPS if st.session_state.pipeline_steps.get(key) == "active"), None)
+    state_line = f"{completed}/{total} pipeline stages complete"
+    if active:
+        state_line += f" · Currently: {escape(active)}"
+    html = (f'<div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin:.4rem 0 .7rem;color:var(--muted);font-size:.84rem;font-weight:700">'
+            f'<span>◷ {state_line}</span><span>Stage-based progress · no fabricated ETA</span></div>'
+            '<div class="progress-rail">' + ''.join(chunks) + '</div>')
     if slot is not None:
         slot.markdown(html, unsafe_allow_html=True)
     else:
@@ -181,8 +214,8 @@ def render_step_status(slot=None) -> None:
 def render_home() -> None:
     st.markdown('''
     <section class="hero-shell">
-      <div class="eyebrow">Your video. Organized by AI.</div>
-      <h1 class="hero-title">Turn hours of video into<br><span class="hero-gradient">clear understanding.</span></h1>
+      <div class="eyebrow">Local-first AI · Video intelligence · RAG-powered</div>
+      <h1 class="hero-title">Every frame has a story.<br><span class="hero-gradient">Every word has an answer.</span></h1>
       <p class="hero-copy">Analyze YouTube videos or upload local audio and video. Get a structured summary, searchable transcript, key decisions, action items, visual notes and an AI chat grounded in your content.</p>
       <div class="hero-tags"><span class="hero-tag">◈ English · Local Whisper</span><span class="hero-tag">◈ Hinglish · Sarvam AI</span><span class="hero-tag">◈ Transcript-grounded chat</span><span class="hero-tag">◈ Export your findings</span></div>
     </section>
@@ -223,7 +256,7 @@ def render_home() -> None:
             st.markdown(f'<div class="how-card"><div class="how-no">{number}</div><div><div class="how-title">{title}</div><div class="how-copy">{desc}</div></div></div>', unsafe_allow_html=True)
         if i in (1,):
             st.write("")
-    st.markdown('<div id="privacy" class="footer">Built for local runs · Local files are processed from this machine. API requests are sent to the providers configured for transcription/LLM analysis. Visual analysis is optional and currently supports local video files.</div>', unsafe_allow_html=True)
+    st.markdown('<div id="privacy" class="footer">FrameSutra · Built with effort by Akarsh Mishra. Local files are processed on this machine. Hinglish audio and enabled AI analysis/visual features may send content to configured providers. Visual analysis is optional and supports local video files.</div>', unsafe_allow_html=True)
 
 
 def render_setup_page() -> None:
@@ -247,6 +280,11 @@ def render_setup_page() -> None:
         with st.container(border=True):
             st.markdown('<div class="feature-icon">↗</div><div class="source-card-title">Paste a YouTube link</div><div class="source-card-copy">Best for public YouTube videos. The app downloads audio only for transcription.</div>', unsafe_allow_html=True)
             st.text_input("YouTube video URL", placeholder="https://www.youtube.com/watch?v=…", key="youtube_url", help="Paste the full link or the youtu.be short link.")
+            preview_url = (st.session_state.get("youtube_url") or "").strip()
+            if preview_url.startswith(("https://www.youtube.com/", "https://youtube.com/", "https://youtu.be/")):
+                with st.expander("▶ Preview selected YouTube video", expanded=True):
+                    st.video(preview_url)
+                    st.caption(f"Selected source: {preview_url}")
             if st.button("Analyze YouTube link →", type="primary", use_container_width=True, key="analyze_youtube"):
                 source = (st.session_state.get("youtube_url") or "").strip()
                 if not source:
@@ -309,12 +347,12 @@ def _launch_pending_run() -> None:
 
 def render_analysis_page() -> None:
     global _PROGRESS_SLOT
-    st.markdown('<div class="eyebrow">Processing workspace</div><h1 style="font-size:2.35rem">Analyzing your video</h1><p class="section-subtitle">Stay on this page while each stage completes. Completed stages get a green indicator; the active stage is highlighted.</p>', unsafe_allow_html=True)
+    st.markdown('<div class="eyebrow">Processing workspace · Live status</div><h1 style="font-size:2.35rem">Analyzing your video</h1><p class="section-subtitle">Progress reflects completed pipeline stages and real transcription chunk callbacks. Embedding/model downloads can take longer on the first run.</p>', unsafe_allow_html=True)
     _PROGRESS_SLOT = st.empty()
     render_step_status(_PROGRESS_SLOT)
     render_retry_panel()
     if not st.session_state.last_error and not st.session_state.result:
-        st.info("Your request is ready. Analysis starts automatically after this page opens.", icon="⏳")
+        st.info("Pipeline runs synchronously in this Streamlit process. Keep this tab open; first-time model downloads and RAG indexing may take several minutes.", icon="⏳")
     c1, c2 = st.columns([1, 4], vertical_alignment="center")
     with c1:
         if st.button("← Change source", use_container_width=True):
@@ -707,6 +745,7 @@ def run_pipeline(
 
 
 init_state()
+render_theme_styles()
 render_splash_once()
 page = st.session_state.get("page", "home")
 render_navbar(page)
