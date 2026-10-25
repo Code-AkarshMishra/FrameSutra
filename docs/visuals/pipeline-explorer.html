@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="An interactive map of the FrameSutra video analysis pipeline and data flow.">
+  <title>FrameSutra | Pipeline explorer</title>
+  <script>try{const t=localStorage.getItem('framesutra.theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t}catch{document.documentElement.dataset.theme='light'}</script>
+  <style>
+    :root{color-scheme:light;--ink:#202a3d;--muted:#768196;--paper:#f5f7fb;--surface:#fff;--blue:#5559e8;--green:#16a47b;--purple:#8c69db;--coral:#ef775f;--line:#e5e9f0}
+    html[data-theme="dark"]{color-scheme:dark;--ink:#edf1fa;--muted:#a7b1c3;--paper:#101522;--surface:#171e2d;--blue:#aaa8ff;--line:#303b4f}
+    html[data-theme="dark"] body{background:var(--paper)}html[data-theme="dark"] .canvas,html[data-theme="dark"] .node,html[data-theme="dark"] .note article,html[data-theme="dark"] .theme-button{background:var(--surface);border-color:var(--line);color:var(--ink)}html[data-theme="dark"] .branch{background:#211d31;color:#d0c8ee}html[data-theme="dark"] .details .path{background:#252f43;color:#d3daea}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.6 system-ui,-apple-system,Segoe UI,sans-serif}
+    main{max-width:1120px;margin:auto;padding:42px 24px 56px}.eyebrow{font-size:11px;font-weight:800;letter-spacing:.13em;color:var(--blue);text-transform:uppercase}
+    h1{font-size:clamp(32px,5vw,54px);line-height:1.08;letter-spacing:-.04em;margin:12px 0}h2{font-size:19px;margin:0 0 8px}p{color:var(--muted);margin:0}
+    .intro{max-width:720px;margin-bottom:30px}.intro a{color:var(--blue)}.canvas{border:1px solid var(--line);border-radius:18px;background:var(--surface);padding:20px;box-shadow:0 18px 55px #2434510b}
+    .legend{display:flex;gap:14px;flex-wrap:wrap;margin:0 0 18px;color:var(--muted);font-size:12px}.legend span{display:flex;align-items:center;gap:6px}.dot{width:9px;height:9px;border-radius:50%;background:var(--blue)}.dot.local{background:var(--green)}.dot.cloud{background:var(--purple)}.dot.store{background:#99a4b6}
+    .flow{display:grid;grid-template-columns:repeat(7,minmax(122px,1fr));gap:10px;overflow:auto;padding:4px 2px 14px;scroll-snap-type:x proximity}
+    .node{position:relative;min-height:108px;display:grid;align-content:start;gap:7px;padding:13px;border:1px solid var(--line);border-radius:12px;background:var(--surface);text-align:left;color:var(--ink);cursor:pointer;scroll-snap-align:start;transition:border-color .15s,transform .15s,box-shadow .15s}
+    .node:hover{transform:translateY(-2px);box-shadow:0 7px 18px #24345110}.node[aria-pressed="true"]{border-color:var(--blue);box-shadow:0 0 0 3px #5559e81c}.node .kind{font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}.node strong{font-size:13px;line-height:1.35}.node small{font-size:10px;color:var(--muted)}
+    .node.local .kind{color:var(--green)}.node.cloud .kind{color:var(--purple)}.node.store .kind{color:#77849a}.arrow{position:absolute;right:-11px;top:43px;z-index:2;color:#a5afbe;font-size:16px;pointer-events:none}
+    .branch{margin:4px 0 18px;padding:11px 14px;border-left:3px solid var(--purple);background:#f8f5ff;border-radius:0 8px 8px 0;color:#625386;font-size:12px}
+    .details{display:grid;grid-template-columns:150px 1fr;gap:18px;padding:18px 4px 2px;border-top:1px solid var(--line)}.step-count{font-size:11px;font-weight:800;letter-spacing:.1em;color:var(--blue);text-transform:uppercase}.details p{max-width:780px}.details .path{display:inline-block;margin-top:10px;padding:5px 8px;border-radius:6px;background:#f1f3f8;color:#566277;font:12px ui-monospace,SFMono-Regular,Consolas,monospace}
+    .note{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}.note article{padding:15px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}.note h2{font-size:14px}.note p{font-size:12px}.footer{margin-top:22px;font-size:12px}.footer a{color:var(--blue)}.theme-button{position:absolute;right:24px;top:24px;padding:9px 12px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);font:600 12px system-ui;cursor:pointer}.theme-button:hover{border-color:var(--blue)}:focus-visible{outline:3px solid #5559e866;outline-offset:2px}
+    @media(max-width:680px){main{padding:28px 14px 40px}.canvas{padding:14px}.flow{grid-template-columns:repeat(7,145px)}.details{grid-template-columns:1fr;gap:6px}.note{grid-template-columns:1fr}.arrow{display:none}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+<main>
+  <button class="theme-button" id="theme-toggle" type="button" aria-label="Switch color theme">Dark mode</button>
+  <header class="intro">
+    <div class="eyebrow">Interactive architecture map</div>
+    <h1>From recording to answers.</h1>
+    <p>Select a stage to see what FrameSutra does, where it runs, and which data stores or providers it touches. The map describes the current React + FastAPI implementation.</p>
+    <p style="margin-top:12px"><a href="../../README.md">← Back to README</a> · <a href="../ARCHITECTURE.md">Full architecture guide</a></p>
+  </header>
+  <section class="canvas" aria-label="Interactive FrameSutra pipeline">
+    <div class="legend" aria-label="Processing location legend"><span><i class="dot"></i> Interface / service</span><span><i class="dot local"></i> Local on the host</span><span><i class="dot cloud"></i> External provider</span><span><i class="dot store"></i> Local storage</span></div>
+    <div class="flow" role="group" aria-label="Choose a pipeline stage">
+      <button class="node" data-id="source" aria-pressed="true"><span class="kind">Input</span><strong>Video or audio</strong><small>YouTube link or upload</small><span class="arrow" aria-hidden="true">→</span></button>
+      <button class="node local" data-id="prepare" aria-pressed="false"><span class="kind">Local</span><strong>Prepare audio</strong><small>yt-dlp · FFmpeg · pydub</small><span class="arrow" aria-hidden="true">→</span></button>
+      <button class="node local" data-id="english" aria-pressed="false"><span class="kind">Local option</span><strong>English speech</strong><small>Whisper model on host</small><span class="arrow" aria-hidden="true">→</span></button>
+      <button class="node cloud" data-id="hinglish" aria-pressed="false"><span class="kind">Cloud option</span><strong>Hinglish speech</strong><small>Short audio pieces to Sarvam</small><span class="arrow" aria-hidden="true">→</span></button>
+      <button class="node cloud" data-id="analysis" aria-pressed="false"><span class="kind">Provider</span><strong>Notes and insights</strong><small>Transcript content to Groq</small><span class="arrow" aria-hidden="true">→</span></button>
+      <button class="node local" data-id="index" aria-pressed="false"><span class="kind">Local</span><strong>Search index</strong><small>Embeddings + Chroma</small><span class="arrow" aria-hidden="true">→</span></button>
+      <button class="node" data-id="review" aria-pressed="false"><span class="kind">Review</span><strong>Chat and exports</strong><small>Browser workspace</small></button>
+    </div>
+    <div class="branch"><strong>Optional visual path:</strong> local video → sampled frames and local duplicate filtering → selected frame images and prompts sent to Groq Vision → visual notes added to the result and search corpus.</div>
+    <section class="details" aria-live="polite" aria-atomic="true">
+      <div class="step-count" id="step-count">Stage 1 of 7</div>
+      <div><h2 id="detail-title">Choose a source</h2><p id="detail-copy">Submit a public YouTube URL or local media file. The browser sends the URL or upload to the local FastAPI service; it does not send the whole project through a third-party web app.</p><span class="path" id="detail-path">Browser → FastAPI · uploads/</span></div>
+    </section>
+  </section>
+  <section class="note" aria-label="Important operating notes">
+    <article><h2>Local-first is not offline</h2><p>English Whisper and semantic search run on the host. Hinglish audio uses Sarvam. Groq may receive text, retrieved excerpts, prompts, and optional sampled images.</p></article>
+    <article><h2>Private single-user design</h2><p>The service has no login. Its owner/rate-limit identity is derived from client IP. Keep it on localhost or add real authentication and authorization before network exposure.</p></article>
+  </section>
+  <p class="footer">More detail: <a href="../PRIVACY_AND_TERMS.md">Privacy and terms</a> · <a href="../API_REFERENCE.md">API reference</a> · <a href="../OPERATIONS.md">Operations</a></p>
+</main>
+<script>
+  const stages = {
+    source: ['Choose a source', 'Submit a public YouTube URL or local media file. The browser sends the URL or upload to the local FastAPI service; it does not send the whole project through a third-party web app.', 'Browser → FastAPI · uploads/'],
+    prepare: ['Prepare audio locally', 'The backend inspects duration, obtains YouTube audio when applicable, converts media with FFmpeg/pydub, and creates manageable audio segments. Temporary source and derived files are stored on the host.', 'utils/audio_processor.py · downloads/'],
+    english: ['Transcribe English locally', 'The English path loads Whisper on the backend host and writes transcript/checkpoint data locally. First use may download model weights and can take longer.', 'core/transcriber.py · .cache/'],
+    hinglish: ['Transcribe Hinglish with Sarvam', 'The audio is split into short pieces and sent to the configured Sarvam speech-to-text/translation endpoint. This provider transfer is required for the Hinglish path.', 'Sarvam API · SARVAM_API_KEY'],
+    analysis: ['Generate notes with Groq', 'The configured Groq text model generates the title, summary, actions, decisions, open questions, answers, and study outputs. Requests can include transcript text or retrieved transcript excerpts.', 'core/analyzer.py · GROQ_API_KEY'],
+    index: ['Create local semantic search', 'The host creates sentence-transformer embeddings and stores transcript/visual chunks in Chroma. Retrieval happens locally; an answer request then sends relevant evidence and the question to the configured text model.', 'core/vector_store.py · vector_db/'],
+    review: ['Review, save, and export', 'The browser polls job state and displays results. SQLite stores job history, bookmarks, chat, and saved study material. The UI offers text, Markdown, JSON, and PDF exports.', 'api.py · legacy SQLite filename']
+  };
+  const buttons = [...document.querySelectorAll('.node')];
+  const number = document.querySelector('#step-count');
+  const title = document.querySelector('#detail-title');
+  const copy = document.querySelector('#detail-copy');
+  const path = document.querySelector('#detail-path');
+  buttons.forEach((button, index) => button.addEventListener('click', () => {
+    buttons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+    const [heading, explanation, location] = stages[button.dataset.id];
+    number.textContent = `Stage ${index + 1} of ${buttons.length}`;
+    title.textContent = heading;
+    copy.textContent = explanation;
+    path.textContent = location;
+  }));
+  const themeButton = document.querySelector('#theme-toggle');
+  const themeKey = 'framesutra.theme';
+  const applyTheme = value => {
+    document.documentElement.dataset.theme = value;
+    themeButton.textContent = value === 'dark' ? 'Light mode' : 'Dark mode';
+    themeButton.setAttribute('aria-label', `Switch to ${value === 'dark' ? 'light' : 'dark'} mode`);
+  };
+  try { applyTheme(localStorage.getItem(themeKey) || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')); }
+  catch { applyTheme('light'); }
+  themeButton.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    try { localStorage.setItem(themeKey, next); } catch {}
+  });
+</script>
+</body>
+</html>
