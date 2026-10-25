@@ -58,7 +58,7 @@ The React interface includes a site-wide light/dark theme, responsive layouts, a
 | **Storage** | Local uploads/downloads, SQLite job history, transcript caches, and vector data |
 | **Intended deployment** | A single-user local workspace; public production deployment needs additional security and operations work |
 
-> **Data note:** “Local-first” does not mean fully offline. English transcription and vector search run on the host. Depending on the features selected, audio can be sent to Sarvam, and transcript excerpts, prompts, or optional video frames can be sent to Groq. Read the [privacy and data-flow guide](docs/PRIVACY_AND_TERMS.md) before processing sensitive media.
+> **Data note:** “Local-first” does not mean fully offline. English transcription and vector search run on the host. Depending on the features selected, audio can be sent to Sarvam, and transcript text/chunks, prompts, retrieved excerpts, or optional sampled frames can be sent to Groq. Read the [privacy and data-flow guide](docs/PRIVACY_AND_TERMS.md) before processing sensitive media.
 
 > **Use responsibly:** Only process videos you own or are authorized to use. You are responsible for respecting copyright, privacy, consent, provider terms, and local laws. FrameSutra is an assistive tool; check important claims against the source video.
 
@@ -230,6 +230,7 @@ The repository also includes `app.py` and `run.bat` for the earlier Streamlit UI
 | [Configuration and operations](docs/OPERATIONS.md) | Setup, environment variables, retention, backup/reset, and troubleshooting |
 | [Privacy, terms, and user agreement](docs/PRIVACY_AND_TERMS.md) | Data handling, provider transfers, user responsibilities, and practical limitations |
 | [Project report](docs/PROJECT_REPORT.md) | Project abstract, goals, design, implementation, results, risks, and future work |
+| [Product analysis](docs/PRODUCT_ANALYSIS.md) | Feature inventory, API capabilities, usability, intended users, uniqueness, comparison, and business-model options |
 | [Deployment guide](FrameSutra_DEPLOYMENT.md) | Private local deployment and considerations for a controlled host |
 | [System design](SYSTEM_DESIGN.md) | Queue defaults, retention, retry behavior, provider counters, and operating limits |
 
