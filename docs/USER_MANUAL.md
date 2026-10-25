@@ -1,6 +1,6 @@
 # FrameSutra user manual
 
-This guide covers the React web interface. Start the FastAPI service and Vite frontend as described in the [quick start](../README.md#-quick-start). Keep the API terminal running while you work.
+This guide covers the React web interface. Start the FastAPI service and Vite frontend as described in the [quick start](../README.md#quick-start). Keep the API terminal running while you work.
 
 Use the **Dark / Light** control in the header to switch the whole interface theme. Your choice is saved in this browser and applies across the workspace, results, library, system screen, dialogs, and not-found page. On the legacy Streamlit screen, use its Theme selector in the top navigation.
 
