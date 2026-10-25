@@ -7,3 +7,9 @@ vector_db/
 *.wav
 .venv312
 .cache/
+uploads/
+frontend/node_modules/
+frontend/dist/
+videolens.sqlite3
+videolens.sqlite3-shm
+videolens.sqlite3-wal
