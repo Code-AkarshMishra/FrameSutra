@@ -24,6 +24,7 @@ import yt_dlp
 from fastapi import Body, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.staticfiles import StaticFiles
 
 from core.analyzer import _extract_json, analyze_transcript, fallback_analysis, is_rate_limit_error
 from core.config import PROJECT_ROOT, load_project_env
@@ -47,13 +48,43 @@ logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"), format="%(asctime)s %(
 logger = logging.getLogger("framesutra.api")
 
 app = FastAPI(title="FrameSutra API", version="2.0.0")
+
+# Build CORS origins list — supports local dev + Railway production URL
+_default_origins = "http://localhost:5173,http://127.0.0.1:5173"
+_railway_url = os.getenv("RAILWAY_STATIC_URL", "").strip()  # auto-set by Railway
+if _railway_url and not _railway_url.startswith("http"):
+    _railway_url = f"https://{_railway_url}"
+_raw_origins = os.getenv("FRONTEND_ORIGINS", _default_origins)
+if _railway_url and _railway_url not in _raw_origins:
+    _raw_origins = f"{_raw_origins},{_railway_url}"
+_cors_origins = [x.strip() for x in _raw_origins.split(",") if x.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[x.strip() for x in os.getenv("FRONTEND_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",") if x.strip()],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "DELETE"],
     allow_headers=["*"]
 )
+
+# ── Serve built React frontend as static files (production / Docker) ──────────
+_static_dir = PROJECT_ROOT / "static"
+if _static_dir.exists() and ((_static_dir / "index.html").exists()):
+    # Mount assets under /assets so they don't collide with /api routes
+    _assets_dir = _static_dir / "assets"
+    if _assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=str(_assets_dir)), name="assets")
+
+    @app.get("/", include_in_schema=False)
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_spa(full_path: str = ""):
+        """Serve React SPA — all non-API routes return index.html."""
+        if full_path.startswith("api"):
+            raise HTTPException(404)
+        static_file = _static_dir / full_path
+        if static_file.is_file():
+            return FileResponse(str(static_file))
+        return FileResponse(str(_static_dir / "index.html"))
 
 WORKERS = max(1, int(os.getenv("VIDEO_JOB_WORKERS", "1")))
 MAX_OUTSTANDING = max(WORKERS, int(os.getenv("MAX_OUTSTANDING_JOBS", "3")))
@@ -1251,3 +1282,9 @@ def clear_cache(request: Request, body: dict[str, bool]) -> dict[str, int]:
 def manual_cleanup(request: Request) -> dict[str, int]:
     logger.info("manual_cleanup owner=%s", _owner(request))
     return run_cleanup()
+
+
+@app.get("/api/health", include_in_schema=False)
+def health_check() -> dict[str, str]:
+    """Liveness probe used by Railway / Docker HEALTHCHECK."""
+    return {"status": "ok", "version": "2.0.0"}
