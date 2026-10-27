@@ -23,7 +23,12 @@ The React interface includes a site-wide light/dark theme, responsive layouts, a
 
 <p align="center"><a href="docs/visuals/pipeline-explorer.html"><strong>🧩 Open the interactive pipeline explorer ↗</strong></a> <small>(open from a local checkout)</small></p>
 
-<p align="center"><img src="docs/assets/framesutra-icon.svg" width="44" height="44" alt="FrameSutra lens logo" /></p>
+<p align="center">
+  <img src="docs/assets/framesutra-icon.svg" width="56" height="56" alt="FrameSutra logo" />
+  &nbsp;&nbsp;
+  <a href="frontend/public/favicon.svg"><img src="frontend/public/favicon.svg" width="32" height="32" alt="FrameSutra browser favicon" /></a>
+  <br /><sub>Product logo · Browser favicon</sub>
+</p>
 
 </div>
 
