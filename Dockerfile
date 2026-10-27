@@ -20,9 +20,9 @@ RUN npm run build
 FROM python:3.12-slim AS backend
 
 # System deps: FFmpeg (required for audio/video processing)
+# Note: ffprobe is bundled inside ffmpeg package — no separate install needed
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
-    ffprobe \
     git \
     && rm -rf /var/lib/apt/lists/*
 
