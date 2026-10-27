@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d1b3e"/>
+      <stop offset="100%" style="stop-color:#00c6ff"/>
+    </linearGradient>
+    <linearGradient id="fgrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1565c0"/>
+      <stop offset="50%" style="stop-color:#0288d1"/>
+      <stop offset="100%" style="stop-color:#00e5ff"/>
+    </linearGradient>
+    <linearGradient id="playgrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00bcd4"/>
+      <stop offset="100%" style="stop-color:#00e5ff"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded square background -->
+  <rect width="64" height="64" rx="12" ry="12" fill="url(#bg)"/>
+
+  <!-- Film strip left bar -->
+  <rect x="8" y="6" width="10" height="52" rx="2" fill="#0d2a6e"/>
+  <!-- Film holes -->
+  <rect x="10" y="10" width="6" height="5" rx="1" fill="white" opacity="0.9"/>
+  <rect x="10" y="19" width="6" height="5" rx="1" fill="white" opacity="0.9"/>
+  <rect x="10" y="28" width="6" height="5" rx="1" fill="white" opacity="0.9"/>
+  <rect x="10" y="37" width="6" height="5" rx="1" fill="white" opacity="0.9"/>
+  <rect x="10" y="46" width="6" height="5" rx="1" fill="white" opacity="0.9"/>
+
+  <!-- F shape top horizontal bar -->
+  <rect x="18" y="6" width="34" height="10" rx="3" fill="url(#fgrad)"/>
+
+  <!-- F shape vertical stem -->
+  <rect x="18" y="6" width="10" height="52" rx="3" fill="url(#fgrad)"/>
+
+  <!-- F shape middle horizontal bar -->
+  <rect x="18" y="26" width="26" height="9" rx="3" fill="url(#fgrad)"/>
+
+  <!-- Play button triangle -->
+  <polygon points="32,36 32,54 48,45" fill="url(#playgrad)" opacity="0.95"/>
+
+  <!-- Speed lines -->
+  <rect x="50" y="40" width="8" height="2.5" rx="1.2" fill="#00e5ff" opacity="0.9"/>
+  <rect x="52" y="44.5" width="6" height="2" rx="1" fill="#00e5ff" opacity="0.7"/>
+  <rect x="53" y="48.5" width="4" height="1.8" rx="0.9" fill="#00e5ff" opacity="0.5"/>
+</svg>
