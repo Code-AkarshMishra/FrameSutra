@@ -49,14 +49,17 @@ logger = logging.getLogger("framesutra.api")
 
 app = FastAPI(title="FrameSutra API", version="2.0.0")
 
-# Build CORS origins list — supports local dev + Railway production URL
+# Build CORS origins list — supports local dev + Railway + Render production URLs
 _default_origins = "http://localhost:5173,http://127.0.0.1:5173"
-_railway_url = os.getenv("RAILWAY_STATIC_URL", "").strip()  # auto-set by Railway
-if _railway_url and not _railway_url.startswith("http"):
-    _railway_url = f"https://{_railway_url}"
+_railway_url = os.getenv("RAILWAY_STATIC_URL", "").strip()     # auto-set by Railway
+_render_url = os.getenv("RENDER_EXTERNAL_URL", "").strip()     # auto-set by Render
+for _platform_url in (_railway_url, _render_url):
+    if _platform_url and not _platform_url.startswith("http"):
+        _platform_url = f"https://{_platform_url}"
 _raw_origins = os.getenv("FRONTEND_ORIGINS", _default_origins)
-if _railway_url and _railway_url not in _raw_origins:
-    _raw_origins = f"{_raw_origins},{_railway_url}"
+for _extra in (_railway_url, _render_url):
+    if _extra and _extra not in _raw_origins:
+        _raw_origins = f"{_raw_origins},{_extra}"
 _cors_origins = [x.strip() for x in _raw_origins.split(",") if x.strip()]
 
 app.add_middleware(

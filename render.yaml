@@ -1,0 +1,55 @@
+services:
+  # ─── Backend + Frontend (single service via Docker) ────────────────────────
+  - type: web
+    name: framesutra
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free          # free tier: 512MB RAM, 0.1 CPU (upgrade to starter for Whisper small)
+    region: singapore   # closest to India
+    branch: main
+    autoDeploy: true    # deploy on every git push
+
+    # Port FastAPI listens on
+    port: 8000
+
+    # Health check — Render needs this to know the app is up
+    healthCheckPath: /api/health
+
+    # Environment variables — set these in the Render dashboard (do NOT commit real keys)
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false       # must be set manually in dashboard
+      - key: SARVAM_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: llama-3.1-8b-instant
+      - key: WHISPER_MODEL
+        value: tiny        # use 'small' only on paid plan (needs >512MB RAM)
+      - key: VIDEO_JOB_WORKERS
+        value: "1"
+      - key: MAX_OUTSTANDING_JOBS
+        value: "2"
+      - key: MAX_UPLOAD_MB
+        value: "50"        # keep low on free tier
+      - key: MAX_MEDIA_HOURS
+        value: "2"
+      - key: JOB_HOURLY_LIMIT
+        value: "3"
+      - key: CHAT_PER_MINUTE_LIMIT
+        value: "10"
+      - key: JOB_RETENTION_DAYS
+        value: "7"
+      - key: MEDIA_RETENTION_DAYS
+        value: "3"
+      # Render auto-sets RENDER_EXTERNAL_URL — we use it for CORS
+      - key: FRONTEND_ORIGINS
+        fromService:
+          type: web
+          name: framesutra
+          property: host
+
+    # Persistent disk for uploads/vector_db/sqlite (required or data resets on redeploy)
+    disk:
+      name: framesutra-data
+      mountPath: /app/data
+      sizeGB: 1           # 1GB free on paid plans; not available on free tier
